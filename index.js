@@ -1047,7 +1047,6 @@ async function gsrun(cl) {
             chose.chat.id,
             "Вы выбрали дату: " +
               `${indexDate}` +
-              `${dateCheck}` +
               ". \n На какое время вас записать?",
             Markup.keyboard(items).oneTime().resize()
           );
