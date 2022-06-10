@@ -151,10 +151,8 @@ async function gsrun(cl) {
     let deleteValues = {
       values: [""],
     };
-
     let dateListButton;
     let blackList = [];
-    let backRecording = ["/555"];
     //Удаление записи клиента админом ----------------
     removeChoiceAdmin.enter(async (chose) => {
       metaData = await gsapi.spreadsheets.get({
@@ -753,7 +751,7 @@ async function gsrun(cl) {
       } else if (startBot.includes(checkMessage)) {
         chose.telegram.sendMessage(
           chose.chat.id,
-          "Приветствуем вас111 " + `${nameClient}` + ". "
+          "Приветствуем вас " + `${nameClient}` + ". "
         );
 
         let metaData = await gsapi.spreadsheets.get({
@@ -845,7 +843,7 @@ async function gsrun(cl) {
         } else if (startBot.includes(checkMessage)) {
           chose.telegram.sendMessage(
             chose.chat.id,
-            "Приветствуем вас333 " + `${nameClient}` + ". "
+            "Приветствуем вас " + `${nameClient}` + ". "
           );
           console.log(111);
           let metaData = await gsapi.spreadsheets.get({
@@ -1720,33 +1718,9 @@ async function gsrun(cl) {
         });
         let checkFree = checkFreeArr.data.values;
         if (checkFree === undefined) {
-          // Запись в таблицу
-          // let idListArr = await gsapi.spreadsheets.values.get({
-          //   spreadsheetId: idSheets,
-          //   range: `${listSetting[0]}!A2:A`,
-          // });
-          // let idList = idListArr.data.values.flat();
-          // let checkIdClient;
-          // console.log(idList);
-          // // let scoreId = 0;
-          // for (i = 0; i < idList.length; i++) {
-          //   checkIdClient = idList[i];
-          //   if (checkIdClient == chose.chat.id) {
-          //     scoreId = i;
-          //     break;
-          //   }
-          // }
-
-          // let indexPhoneArr = await gsapi.spreadsheets.values.get({
-          //   spreadsheetId: idSheets,
-          //   range: `${listSetting[0]}!R${scoreId + 2}C3:R${scoreId + 2}C3`,
-          // });
-          // indexPhone = indexPhoneArr.data.values.flat();
           let dateRecord = {
             values: [
               "Клиент: " + `${nameClient}` + "\nУслуга: " + `${indexService}`,
-              // "\nТелефон: " +
-              // `${indexPhone}`,
             ],
           };
           const updateOptions = {
