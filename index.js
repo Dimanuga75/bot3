@@ -273,7 +273,7 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-
+          dateCheck = dateCheck + 8;
           let timeSheets = numberRecordsArr.data.values.flat();
           let time = "";
           let row = 0;
@@ -980,7 +980,7 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-
+          dateCheck = dateCheck + 8;
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${listSheet[0]}!A4:A`,
@@ -1047,7 +1047,7 @@ async function gsrun(cl) {
             chose.chat.id,
             "Вы выбрали дату: " +
               `${indexDate}` +
-              `${timeCurrent}` +
+              `${dateCheck}` +
               ". \n На какое время вас записать?",
             Markup.keyboard(items).oneTime().resize()
           );
@@ -1521,6 +1521,7 @@ async function gsrun(cl) {
               timeCurrent[timeCurrent.length - 13]
           );
         }
+        dateCheck = dateCheck + 8;
         //console.log(dateCheck);
         //console.log(timeCurrent);
         let timeSheets = numberRecordsArr.data.values.flat();
