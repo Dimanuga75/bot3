@@ -1327,7 +1327,8 @@ async function gsrun(cl) {
             }
 
             let currentYear = new Date().getFullYear();
-            let currentDate = Date.now() + mmsHours * (timeZone - 1);
+            let currentDate = Date.now();
+            // + mmsHours * (timeZone - 1);
             let dateRecordsMM = new Date(
               currentYear,
               monthRec,
@@ -1335,7 +1336,7 @@ async function gsrun(cl) {
               hoursRec,
               minutesRec
             );
-            let intervalTime = dateRecordsMM - currentDate - mmsHours * 2;
+            let intervalTime = dateRecordsMM - currentDate - mmsHours;
             console.log(intervalTime);
             if (intervalTime > 0) {
               setTimeout(() => {
