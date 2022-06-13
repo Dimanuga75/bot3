@@ -1301,7 +1301,7 @@ async function gsrun(cl) {
             //Рабочая запись (первый лист) в таблицу текущей записи клиента
             let clientBaseIdAr = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
-              range: `${listSettings[0]}!A1:A`,
+              range: `${listSetting[0]}!A1:A`,
             });
             let clientBaseId = clientBaseIdAr.data.values.flat();
             for (let n = 1; n < clientBaseId.length; n++) {
@@ -1319,7 +1319,7 @@ async function gsrun(cl) {
                 };
                 const updateOptions1 = {
                   spreadsheetId: idSheets,
-                  range: `${listSettings[0]}!R${n + 1}C8:R${n + 1}C14`,
+                  range: `${listSetting[0]}!R${n + 1}C8:R${n + 1}C14`,
                   valueInputOption: "USER_ENTERED",
                   resource: { values: dateRecordClientTable },
                 };
