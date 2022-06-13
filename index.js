@@ -84,23 +84,39 @@ async function gsrun(cl) {
     for (i = 0; i < 2; i++) {
       listSetting.push(metaData.data.sheets[i].properties.title);
     }
-    // Наши услуги
-    let serviceListArr = await gsapi.spreadsheets.values.get({
-      spreadsheetId: idSheets,
-      range: `${listSetting[1]}!A2:A`,
-    });
-    serviceList = serviceListArr.data.values.flat();
 
     let listSheet = [];
     //  sheets = metaData.data.sheets;
     for (let i = 2; i < metaData.data.sheets.length; i++) {
       listSheet.push(metaData.data.sheets[i].properties.title);
     }
-    dataSheets = await gsapi.spreadsheets.values.get({
+    // Получаем данные из таблицы оодним запросом -------------------------------------------------------------------
+    let dataBase = await gsapi.spreadsheets.values.batchGet({
       spreadsheetId: idSheets,
-      range: `${listSheet[0]}!2:2`,
+      ranges: [
+        `${listSetting[1]}!A2:A`,
+        `${listSheet[0]}!A4:A`,
+        `${listSheet[0]}!3:3`,
+        `${listSheet[0]}!2:2`,
+        `${listSetting[1]}!B2:B`,
+      ],
     });
-    dateArr = dataSheets.data.values.flat();
+
+    let serviceList = dataBase.data.valueRanges[0].values.flat();
+    let numberRecords = dataBase.data.valueRanges[1].values.length;
+    let timeArray = dataBase.data.valueRanges[1].values.flat();
+    let dateSheets = dataBase.data.valueRanges[2].values.flat();
+    let dateArr = dataBase.data.valueRanges[3].values.flat();
+    let priceList = dataBase.data.valueRanges[4].values.flat();
+
+    //  Получаем прай-лист
+    let textPrice = "";
+    for (i = 0; i < serviceList.length; i++) {
+      textPrice = textPrice + `${serviceList[i]} - ` + `${priceList[i]}` + "\n";
+    }
+    //---------------------------------------------
+    // Определяем текущую дату из строки 2 с датами
+
     let columns = 1;
     for (let i = 0; i < dateArr.length; i++) {
       if (
@@ -112,19 +128,13 @@ async function gsrun(cl) {
       }
     }
     //Получаем значение текущей даты
-
-    dataColumn = await gsapi.spreadsheets.values.get({
+    let dataColumn = await gsapi.spreadsheets.values.get({
       spreadsheetId: idSheets,
       range: `${listSheet[0]}!R3C${columns}:R3C${columns + 30}`,
     });
-    dateList = dataColumn.data.values.flat();
-    // dateListButton = anotherMaster.concat(dateList);
-    currentDay = dateList[0];
-    let numberRecordsArr = await gsapi.spreadsheets.values.get({
-      spreadsheetId: idSheets,
-      range: `${listSheet[0]}!A4:A`,
-    });
-    timeArray = numberRecordsArr.data.values.flat();
+    let dateList = dataColumn.data.values.flat();
+    let currentDay = dateList[0];
+
     //  let idClient;
     //  let nameClient = "";
     //  let indexMaster = "";
@@ -1288,6 +1298,35 @@ async function gsrun(cl) {
                 break;
               }
             }
+            //Рабочая запись (первый лист) в таблицу текущей записи клиента
+            let clientBaseIdAr = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${listSettings[0]}!A1:A`,
+            });
+            let clientBaseId = clientBaseIdAr.data.values.flat();
+            for (let n = 1; n < clientBaseId.length; n++) {
+              if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
+                let dateRecordClientTable = {
+                  values: [
+                    `${nameClient}`,
+                    `${indexDate}`,
+                    `${indexTime}`,
+                    `${indexMaster}`,
+                    `${indexService}`,
+                    `${indexRow}`,
+                    `${indexColumn}`,
+                  ],
+                };
+                const updateOptions1 = {
+                  spreadsheetId: idSheets,
+                  range: `${listSettings[0]}!R${n + 1}C8:R${n + 1}C14`,
+                  valueInputOption: "USER_ENTERED",
+                  resource: { values: dateRecordClientTable },
+                };
+                await gsapi.spreadsheets.values.update(updateOptions1);
+                break;
+              }
+            }
             //Настройка оповещения клиента за час
             let mmsHours = 3600000;
             let timeZone = 8;
@@ -1338,21 +1377,42 @@ async function gsrun(cl) {
             let intervalTime = dateRecordsMM - currentDate - mmsHours * 10;
             console.log(intervalTime);
             if (intervalTime > 0) {
-              setTimeout(() => {
-                chose.telegram.sendMessage(
-                  chose.chat.id,
-                  "Приветствуем вас " +
-                    `${nameClient}` +
-                    ". Напоминаем вам, что Вы записаны на сегондя:\nМастер: " +
-                    `${indexMaster}` +
-                    "\nУслуга: " +
-                    `${indexService}` +
-                    "\nДата записи: " +
-                    `${indexDate}` +
-                    "\nВремя записи:" +
-                    `${indexTime}`,
-                  Markup.keyboard(deleteRecord).oneTime().resize()
-                );
+              setTimeout(async () => {
+                let clientBaseIdAr = await gsapi.spreadsheets.values.get({
+                  spreadsheetId: idSheets,
+                  range: `${listSetting[0]}!A1:A`,
+                });
+                let clientBaseId = clientBaseIdAr.data.values.flat();
+                for (let n = 0; n < clientBaseId.length; n++) {
+                  if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
+                    let clientLastRecords = await gsapi.spreadsheets.values.get(
+                      {
+                        spreadsheetId: idSheets,
+                        range: `${listSetting[0]}!H${n + 1}:N${n + 1}`,
+                      }
+                    );
+                    let nameClient = clientLastRecords.data.values.flat()[0];
+                    let indexMaster = clientLastRecords.data.values.flat()[3];
+                    let indexService = clientLastRecords.data.values.flat()[4];
+                    let indexDate = clientLastRecords.data.values.flat()[1];
+                    let indexTime = clientLastRecords.data.values.flat()[2];
+                    chose.telegram.sendMessage(
+                      chose.chat.id,
+                      "Приветсвуем вас " +
+                        `${nameClient}` +
+                        ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
+                        `${indexMaster}` +
+                        "\nУслуга: " +
+                        `${indexService}` +
+                        "\nДата записи: " +
+                        `${indexDate}` +
+                        "\nВремя записи:" +
+                        `${indexTime}`,
+                      Markup.keyboard(deleteRecord).oneTime().resize()
+                    );
+                    break;
+                  }
+                }
               }, intervalTime);
             }
             return chose.scene.leave();
@@ -1844,76 +1904,96 @@ async function gsrun(cl) {
       let removeConfirm = ["Да, удалить"];
       let noremoveConfirm = ["Запись не удалять"];
       if (removeConfirm.includes(answer)) {
-        const updateOptionsDelete = {
+        let clientBaseIdAr = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
-          range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
-          valueInputOption: "USER_ENTERED",
-          resource: { values: deleteValues },
-        };
-        await gsapi.spreadsheets.values.update(updateOptionsDelete);
-
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          'Мы удалили вашу запись. Для записи на другую дату нажмите на кнопку "Новая запись" или напишите сообщение "запись" (пишем без кавычек).',
-          Markup.keyboard(recordNewButton).oneTime().resize()
-        );
-        let metaData = await gsapi.spreadsheets.get({
-          spreadsheetId: idSheets,
+          range: `${listSettings[0]}!A1:A`,
         });
-        // Формируем список первых двух рабочих листов
-        function sheetSetting() {
-          let listSetting = new Array();
-          for (i = 0; i < 2; i++)
-            listSetting.push(metaData.data.sheets[i].properties.title);
-          return listSetting;
-        }
-        const listSettings = sheetSetting();
-
-        adminChatIdArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSettings[0]}!E1:E`,
-        });
-        let adminMessage = adminChatIdArr.data.values.flat();
-        for (let m = 1; m < adminMessage.length; m++) {
-          chose.telegram.sendMessage(
-            adminMessage[m],
-            "Была удалена следующая запись:\nМастер: " +
-              `${indexMaster}` +
-              "\nКлиент: " +
-              `${nameClient}` +
-              "\nУслуга: " +
-              `${indexService}` +
-              "\nДата записи: " +
-              `${indexDate}` +
-              "\nВремя записи:" +
-              `${indexTime}`
-          );
-        }
-        //Оповещение мастера
-        let masterNameArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSettings[0]}!G1:G`,
-        });
-        masterName = masterNameArr.data.values.flat();
-        for (let m = 1; m < masterName.length; m++) {
-          if (`${masterName[m]}` == `${indexMaster}`) {
-            masterIdArr = await gsapi.spreadsheets.values.get({
+        let clientBaseId = clientBaseIdAr.data.values.flat();
+        for (let n = 0; n < clientBaseId.length; n++) {
+          if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
+            let clientLastRecords = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
-              range: `${listSettings[0]}!F1:F`,
+              range: `${listSettings[0]}!H${n + 1}:N${n + 1}`,
             });
-            masterId = masterIdArr.data.values.flat()[m];
+            let nameClient = clientLastRecords.data.values.flat()[0];
+            let indexMaster = clientLastRecords.data.values.flat()[3];
+            let indexService = clientLastRecords.data.values.flat()[4];
+            let indexDate = clientLastRecords.data.values.flat()[1];
+            let indexTime = clientLastRecords.data.values.flat()[2];
+            let indexRow = clientLastRecords.data.values.flat()[5];
+            let indexColumn = clientLastRecords.data.values.flat()[6];
+            let deleteValuesWork = { values: ["", "", "", "", "", "", ""] };
+            const updateOptions1 = {
+              spreadsheetId: idSheets,
+              range: `${listSettings[0]}!R${n + 1}C8:R${n + 1}C14`,
+              valueInputOption: "USER_ENTERED",
+              resource: { values: deleteValuesWork },
+            };
+            await gsapi.spreadsheets.values.update(updateOptions1);
+            //break;
+            // }
+            //  }
+            const updateOptionsDelete = {
+              spreadsheetId: idSheets,
+              range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
+              valueInputOption: "USER_ENTERED",
+              resource: { values: deleteValues },
+            };
+            await gsapi.spreadsheets.values.update(updateOptionsDelete);
+
             chose.telegram.sendMessage(
-              masterId,
-              "Была удалена следующая запись: " +
-                "\nКлиент: " +
-                `${nameClient}` +
-                "\nУслуга: " +
-                `${indexService}` +
-                "\nДата записи: " +
-                `${indexDate}` +
-                "\nВремя записи:" +
-                `${indexTime}`
+              chose.chat.id,
+              "Мы удалили вашу запись. Вы можете записаться на другую дату. Выберайте услугу: ",
+              Markup.keyboard(serviceList).oneTime().resize()
             );
+            adminChatIdArr = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${listSettings[0]}!E1:E`,
+            });
+            let adminMessage = adminChatIdArr.data.values.flat();
+            for (let m = 1; m < adminMessage.length; m++) {
+              chose.telegram.sendMessage(
+                adminMessage[m],
+                "Была удалена следующая запись:\nМастер: " +
+                  `${indexMaster}` +
+                  "\nКлиент: " +
+                  `${nameClient}` +
+                  "\nУслуга: " +
+                  `${indexService}` +
+                  "\nДата записи: " +
+                  `${indexDate}` +
+                  "\nВремя записи:" +
+                  `${indexTime}`
+              );
+            }
+            //Оповещение мастера
+            let masterNameArr = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${listSettings[0]}!G1:G`,
+            });
+            masterName = masterNameArr.data.values.flat();
+            for (let m = 1; m < masterName.length; m++) {
+              if (`${masterName[m]}` == `${indexMaster}`) {
+                masterIdArr = await gsapi.spreadsheets.values.get({
+                  spreadsheetId: idSheets,
+                  range: `${listSettings[0]}!F1:F`,
+                });
+                masterId = masterIdArr.data.values.flat()[m];
+                chose.telegram.sendMessage(
+                  masterId,
+                  "Была удалена следующая запись: " +
+                    "\nКлиент: " +
+                    `${nameClient}` +
+                    "\nУслуга: " +
+                    `${indexService}` +
+                    "\nДата записи: " +
+                    `${indexDate}` +
+                    "\nВремя записи:" +
+                    `${indexTime}`
+                );
+                break;
+              }
+            }
             break;
           }
         }
