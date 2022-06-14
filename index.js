@@ -1280,8 +1280,8 @@ async function gsrun(cl) {
                       Markup.keyboard(deleteRecord).oneTime().resize()
                     );
                     //  }
+                    break;
                   }
-                  break;
                 }
               }, intervalTime);
             }
