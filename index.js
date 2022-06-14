@@ -857,7 +857,7 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          // dateCheck = dateCheck + 8;
+          dateCheck = dateCheck + 8;
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${listSheet[0]}!A4:A`,
