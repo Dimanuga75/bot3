@@ -1261,22 +1261,26 @@ async function gsrun(cl) {
                     let indexService = clientLastRecords.data.values.flat()[4];
                     let indexDate = clientLastRecords.data.values.flat()[1];
                     let indexTime = clientLastRecords.data.values.flat()[2];
-                    chose.telegram.sendMessage(
-                      chose.chat.id,
-                      "Приветсвуем вас " +
-                        `${nameClient}` +
-                        ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
-                        `${indexMaster}` +
-                        "\nУслуга: " +
-                        `${indexService}` +
-                        "\nДата записи: " +
-                        `${indexDate}` +
-                        "\nВремя записи:" +
-                        `${indexTime}`,
-                      Markup.keyboard(deleteRecord).oneTime().resize()
-                    );
-                    break;
+                    if (nameClient == "") {
+                      return chose.scene.leave();
+                    } else {
+                      chose.telegram.sendMessage(
+                        chose.chat.id,
+                        "Приветсвуем вас " +
+                          `${nameClient}` +
+                          ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
+                          `${indexMaster}` +
+                          "\nУслуга: " +
+                          `${indexService}` +
+                          "\nДата записи: " +
+                          `${indexDate}` +
+                          "\nВремя записи:" +
+                          `${indexTime}`,
+                        Markup.keyboard(deleteRecord).oneTime().resize()
+                      );
+                    }
                   }
+                  break;
                 }
               }, intervalTime);
             }
@@ -1812,7 +1816,7 @@ async function gsrun(cl) {
               'Мы удалили вашу запись. Вы можете записаться на другую дату. Для этого нажмите на кнопку "Новая запись" или напишите слово "запись" (пишем без кавычек).',
               Markup.keyboard(recordNewButton).oneTime().resize()
             );
-            clearTimeout(timer);
+
             adminChatIdArr = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
               range: `${listSetting[0]}!E1:E`,
