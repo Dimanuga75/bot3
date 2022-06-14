@@ -1242,7 +1242,7 @@ async function gsrun(cl) {
             let intervalTime = dateRecordsMM - currentDate - mmsHours * 10;
             console.log(intervalTime);
             if (intervalTime > 0) {
-              let timer = setTimeout(async () => {
+              setTimeout(async () => {
                 let clientBaseIdAr = await gsapi.spreadsheets.values.get({
                   spreadsheetId: idSheets,
                   range: `${listSetting[0]}!A1:A`,
