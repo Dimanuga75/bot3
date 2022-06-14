@@ -1261,25 +1261,26 @@ async function gsrun(cl) {
                     let indexService = clientLastRecords.data.values.flat()[4];
                     let indexDate = clientLastRecords.data.values.flat()[1];
                     let indexTime = clientLastRecords.data.values.flat()[2];
-                    //  if (nameClient == "") {
-                    //chose.reply("Оповещение не отправлено")
-                    //    return chose.scene.leave();
-                    //  } else {
-                    chose.telegram.sendMessage(
-                      chose.chat.id,
-                      "Приветсвуем вас " +
-                        `${nameClient}` +
-                        ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
-                        `${indexMaster}` +
-                        "\nУслуга: " +
-                        `${indexService}` +
-                        "\nДата записи: " +
-                        `${indexDate}` +
-                        "\nВремя записи: " +
-                        `${indexTime}`,
-                      Markup.keyboard(deleteRecord).oneTime().resize()
-                    );
-                    //  }
+                    if (nameClient == "") {
+                      //  chose.reply("Оповещение не отправлено")
+                      return chose.scene.leave();
+                      // break
+                    } else {
+                      chose.telegram.sendMessage(
+                        chose.chat.id,
+                        "Приветсвуем вас " +
+                          `${nameClient}` +
+                          ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
+                          `${indexMaster}` +
+                          "\nУслуга: " +
+                          `${indexService}` +
+                          "\nДата записи: " +
+                          `${indexDate}` +
+                          "\nВремя записи: " +
+                          `${indexTime}`,
+                        Markup.keyboard(deleteRecord).oneTime().resize()
+                      );
+                    }
                     break;
                   }
                 }
