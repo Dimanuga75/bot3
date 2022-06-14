@@ -761,7 +761,7 @@ async function gsrun(cl) {
         let dateArr = dataBase.data.valueRanges[3].values.flat();
         let priceList = dataBase.data.valueRanges[4].values.flat();
         let blackList = dataBase.data.valueRanges[5].values.flat();
-        console.log(serviceList);
+
         //  Получаем прай-лист
         let textPrice = "";
         for (i = 0; i < serviceList.length; i++) {
@@ -857,7 +857,7 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          // dateCheck = dateCheck + 8;
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${listSheet[0]}!A4:A`,
@@ -1261,24 +1261,25 @@ async function gsrun(cl) {
                     let indexService = clientLastRecords.data.values.flat()[4];
                     let indexDate = clientLastRecords.data.values.flat()[1];
                     let indexTime = clientLastRecords.data.values.flat()[2];
-                    if (nameClient == "") {
-                      return chose.scene.leave();
-                    } else {
-                      chose.telegram.sendMessage(
-                        chose.chat.id,
-                        "Приветсвуем вас " +
-                          `${nameClient}` +
-                          ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
-                          `${indexMaster}` +
-                          "\nУслуга: " +
-                          `${indexService}` +
-                          "\nДата записи: " +
-                          `${indexDate}` +
-                          "\nВремя записи:" +
-                          `${indexTime}`,
-                        Markup.keyboard(deleteRecord).oneTime().resize()
-                      );
-                    }
+                    //  if (nameClient == "") {
+                    //chose.reply("Оповещение не отправлено")
+                    //    return chose.scene.leave();
+                    //  } else {
+                    chose.telegram.sendMessage(
+                      chose.chat.id,
+                      "Приветсвуем вас " +
+                        `${nameClient}` +
+                        ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
+                        `${indexMaster}` +
+                        "\nУслуга: " +
+                        `${indexService}` +
+                        "\nДата записи: " +
+                        `${indexDate}` +
+                        "\nВремя записи: " +
+                        `${indexTime}`,
+                      Markup.keyboard(deleteRecord).oneTime().resize()
+                    );
+                    //  }
                   }
                   break;
                 }
