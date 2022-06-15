@@ -9,7 +9,7 @@ const {
 } = require("telegraf");
 const moment = require("moment");
 require("dotenv").config();
-//console.log(moment().format());
+
 const bot = new Telegraf(process.env.BOT_TOKEN);
 const startScene = new Scenes.BaseScene("startScene");
 const black = new Scenes.BaseScene("black");
@@ -61,7 +61,7 @@ const { google } = require("googleapis");
 const idSheets = process.env.ID_SHEETS;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
 const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
-console.log(GOOGLE_CLIENT_EMAIL);
+
 const client = new google.auth.JWT(
   GOOGLE_CLIENT_EMAIL,
   null,
@@ -133,22 +133,31 @@ async function gsrun(cl) {
         break;
       }
     }
+    // ---------------------------
+    let timeCurrentcheck = moment().format();
+    let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+    if (dateCheck === "0") {
+      dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+    } else {
+      dateCheck = Number(
+        timeCurrentcheck[timeCurrentcheck.length - 14] +
+          timeCurrentcheck[timeCurrentcheck.length - 13]
+      );
+    }
+    //dateCheck = dateCheck + 8
+
+    if (dateCheck < 8) {
+      columns = columns + 1;
+    }
+    //---------------------------
     //Получаем значение текущей даты
     let dataColumn = await gsapi.spreadsheets.values.get({
       spreadsheetId: idSheets,
-      range: `${listSheet[0]}!R3C${columns}:R3C${columns + 30}`,
+      range: `${listSheet[0]}!R3C${columns}:R3C${columns + 7}`,
     });
     let dateList = dataColumn.data.values.flat();
     let currentDay = dateList[0];
 
-    //  let idClient;
-    //  let nameClient = "";
-    //  let indexMaster = "";
-    //  let indexDate = "";
-    //  let indexTime = "";
-    //  let indexColumn = "";
-    //  let indexRow = "";
-    //  let indexService = "";
     let startBot = ["старт", "запись", "Вернуться в начало", "1"];
     let anotherMaster = ["Выбрать другого мастера"];
     let confirmEntry = ["Подтвердить запись"];
@@ -225,6 +234,23 @@ async function gsrun(cl) {
               break;
             }
           }
+          // ---------------------------
+          let timeCurrentcheck = moment().format();
+          let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+          if (dateCheck === "0") {
+            dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+          } else {
+            dateCheck = Number(
+              timeCurrentcheck[timeCurrentcheck.length - 14] +
+                timeCurrentcheck[timeCurrentcheck.length - 13]
+            );
+          }
+          //dateCheck = dateCheck + 8
+
+          if (dateCheck < 8) {
+            columns = columns + 1;
+          }
+          //---------------------------
           //Получаем значение текущей даты
           let dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
@@ -258,6 +284,23 @@ async function gsrun(cl) {
               break;
             }
           }
+          // ---------------------------
+          let timeCurrentcheck = moment().format();
+          let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+          if (dateCheck === "0") {
+            dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+          } else {
+            dateCheck = Number(
+              timeCurrentcheck[timeCurrentcheck.length - 14] +
+                timeCurrentcheck[timeCurrentcheck.length - 13]
+            );
+          }
+          //dateCheck = dateCheck + 8
+
+          if (dateCheck < 8) {
+            columns = columns + 1;
+          }
+          //---------------------------
           //Получаем значение текущей даты
           dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
@@ -640,7 +683,6 @@ async function gsrun(cl) {
       let checkMessage = chose.message.text;
       nameClient = chose.chat.first_name;
       let check = chose.chat.id.toString();
-
       chose.reply("...");
 
       let metaData = await gsapi.spreadsheets.get({
@@ -698,6 +740,23 @@ async function gsrun(cl) {
           break;
         }
       }
+      // ---------------------------
+      let timeCurrentcheck = moment().format();
+      let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+      if (dateCheck === "0") {
+        dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+      } else {
+        dateCheck = Number(
+          timeCurrentcheck[timeCurrentcheck.length - 14] +
+            timeCurrentcheck[timeCurrentcheck.length - 13]
+        );
+      }
+      //dateCheck = dateCheck + 8
+
+      if (dateCheck < 8) {
+        columns = columns + 1;
+      }
+      //---------------------------
       //Получаем значение текущей даты
       dataColumn = await gsapi.spreadsheets.values.get({
         spreadsheetId: idSheets,
@@ -714,13 +773,13 @@ async function gsrun(cl) {
 
         chose.telegram.sendMessage(
           chose.chat.id,
-          "Выберите111 на какую услугу вас записать",
+          "Выберите на какую услугу вас записать",
           Markup.keyboard(serviceList).oneTime().resize()
         );
       } else if (startBot.includes(checkMessage)) {
         chose.telegram.sendMessage(
           chose.chat.id,
-          "Приветствуем222 вас " + `${nameClient}` + ". "
+          "Приветствуем вас " + `${nameClient}` + ". "
         );
         Array.prototype.push.apply(serviceList, priceButton);
 
@@ -803,7 +862,7 @@ async function gsrun(cl) {
         } else if (anotherMaster.includes(checkMessage)) {
           chose.telegram.sendMessage(
             chose.chat.id,
-            "Выберите мастера:",
+            "Выберите другого мастера:",
             Markup.keyboard(listSheetButton).oneTime().resize()
           );
         } else if (listSheet.includes(checkMessage)) {
@@ -824,6 +883,23 @@ async function gsrun(cl) {
               break;
             }
           }
+          // ---------------------------
+          let timeCurrentcheck = moment().format();
+          let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+          if (dateCheck === "0") {
+            dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+          } else {
+            dateCheck = Number(
+              timeCurrentcheck[timeCurrentcheck.length - 14] +
+                timeCurrentcheck[timeCurrentcheck.length - 13]
+            );
+          }
+          //dateCheck = dateCheck + 8
+
+          if (dateCheck < 8) {
+            columns = columns + 1;
+          }
+          //---------------------------
           //Получаем значение текущей даты
           dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
@@ -1385,6 +1461,23 @@ async function gsrun(cl) {
             break;
           }
         }
+        // ---------------------------
+        let timeCurrentcheck = moment().format();
+        let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+        if (dateCheck === "0") {
+          dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+        } else {
+          dateCheck = Number(
+            timeCurrentcheck[timeCurrentcheck.length - 14] +
+              timeCurrentcheck[timeCurrentcheck.length - 13]
+          );
+        }
+        //dateCheck = dateCheck + 8
+
+        if (dateCheck < 8) {
+          columns = columns + 1;
+        }
+        //---------------------------
         //Получаем значение текущей даты
         dataColumn = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
@@ -1418,6 +1511,23 @@ async function gsrun(cl) {
             break;
           }
         }
+        // ---------------------------
+        let timeCurrentcheck = moment().format();
+        let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+        if (dateCheck === "0") {
+          dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+        } else {
+          dateCheck = Number(
+            timeCurrentcheck[timeCurrentcheck.length - 14] +
+              timeCurrentcheck[timeCurrentcheck.length - 13]
+          );
+        }
+        //dateCheck = dateCheck + 8
+
+        if (dateCheck < 8) {
+          columns = columns + 1;
+        }
+        //---------------------------
         //Получаем значение текущей даты
         dataColumn = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
