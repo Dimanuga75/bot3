@@ -941,7 +941,7 @@ async function gsrun(cl) {
             );
           }
           if (dateCheck >= 16) {
-            dateCheck = dateCheck - 16;
+            dateCheck = 8;
           } else {
             dateCheck = dateCheck + 8;
           }
@@ -965,7 +965,7 @@ async function gsrun(cl) {
           for (i = 0; i < timeSheets.length; i++) {
             if (timeSheets[i][0] === "1") {
               time = timeSheets[i][0] + timeSheets[i][1];
-              console.log(Number(time));
+              //  console.log(Number(time));
               row = row + 1;
             } else {
               time = timeSheets[i][0];
