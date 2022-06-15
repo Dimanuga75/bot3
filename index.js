@@ -320,16 +320,21 @@ async function gsrun(cl) {
         } else if (currentDay.includes(checkMessage)) {
           indexDate = chose.update.message.text;
           let timeCurrent = moment().format();
-          let dateCheck = timeCurrent[timeCurrent.length - 14];
-          if (dateCheck === "0") {
-            dateCheck = Number(timeCurrent[timeCurrent.length - 13]);
+          let timeCheck = timeCurrent[timeCurrent.length - 14];
+          if (timeCheck === "0") {
+            timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
           } else {
-            dateCheck = Number(
+            timeCheck = Number(
               timeCurrent[timeCurrent.length - 14] +
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          if (timeCheck >= 16) {
+            timeCheck = 8;
+          } else {
+            timeCheck = timeCheck + 8;
+          }
+
           let time = "";
           let row = 0;
           for (i = 0; i < timeSheets.length; i++) {
@@ -341,7 +346,7 @@ async function gsrun(cl) {
               row = row + 1;
             }
 
-            if (Number(time) === dateCheck) {
+            if (Number(time) === timeCheck) {
               break;
             }
           }
@@ -926,11 +931,11 @@ async function gsrun(cl) {
             Markup.keyboard(dateListButton).oneTime().resize()
           );
         } else if (checkMessage == currentDay) {
-          console.log("Я в текущей дате");
+          // console.log("Я в текущей дате");
           indexDate = chose.update.message.text;
 
           let timeCurrent = moment().format();
-          console.log(moment().format());
+
           let dateCheck = timeCurrent[timeCurrent.length - 14];
           if (dateCheck === "0") {
             dateCheck = Number(timeCurrent[timeCurrent.length - 13]);
@@ -940,11 +945,11 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          if (dateCheck >= 16) {
-            dateCheck = 8;
-          } else {
-            dateCheck = dateCheck + 8;
-          }
+          // if (dateCheck >= 16) {
+          //   dateCheck = 8;
+          // } else {
+          //   dateCheck = dateCheck + 8;
+          // }
 
           console.log(dateCheck);
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
@@ -969,12 +974,12 @@ async function gsrun(cl) {
               row = row + 1;
             } else {
               time = timeSheets[i][0];
-              console.log(Number(time));
+              //  console.log(Number(time));
               row = row + 1;
             }
 
             if (Number(time) === Number(dateCheck)) {
-              console.log(row);
+              //  console.log(row);
               break;
             }
           }
