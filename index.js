@@ -965,15 +965,15 @@ async function gsrun(cl) {
           for (i = 0; i < timeSheets.length; i++) {
             if (timeSheets[i][0] === "1") {
               time = timeSheets[i][0] + timeSheets[i][1];
-              // console.log(Number(time));
+              console.log(Number(time));
               row = row + 1;
             } else {
               time = timeSheets[i][0];
-              // console.log(Number(time));
+              console.log(Number(time));
               row = row + 1;
             }
 
-            if (Number(time) === dateCheck) {
+            if (Number(time) === Number(dateCheck)) {
               console.log(row);
               break;
             }
