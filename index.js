@@ -137,7 +137,7 @@ async function gsrun(cl) {
     let timeCurrentcheck = moment().format();
     let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
     if (dateCheck === "0") {
-      dateCheck = Number(ttimeCurrentcheck[timeCurrentcheck.length - 13]);
+      dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
     } else {
       dateCheck = Number(
         timeCurrentcheck[timeCurrentcheck.length - 14] +
