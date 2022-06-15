@@ -57,12 +57,17 @@ process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
 
 const { google } = require("googleapis");
-const keys = require("./keys.json");
+//const keys = require("./keys.json");
 const idSheets = process.env.ID_SHEETS;
-const client = new google.auth.JWT(keys.client_email, null, keys.private_key, [
-  "https://www.googleapis.com/auth/spreadsheets",
-]);
-
+const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
+const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
+const client = new google.auth.JWT(
+  GOOGLE_CLIENT_EMAIL,
+  null,
+  GOOGLE_PRIVATE_KEY,
+  ["https://www.googleapis.com/auth/spreadsheets"]
+);
+console.log(GOOGLE_CLIENT_EMAIL);
 client.authorize(function (err, tokens) {
   if (err) {
     console.log(err);
