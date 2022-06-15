@@ -68,7 +68,7 @@ const client = new google.auth.JWT(
   GOOGLE_PRIVATE_KEY,
   ["https://www.googleapis.com/auth/spreadsheets"]
 );
-//console.log(GOOGLE_CLIENT_EMAIL);
+console.log(moment().format());
 client.authorize(function (err, tokens) {
   if (err) {
     console.log(err);
