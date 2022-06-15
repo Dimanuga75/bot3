@@ -320,6 +320,7 @@ async function gsrun(cl) {
         } else if (currentDay.includes(checkMessage)) {
           indexDate = chose.update.message.text;
           let timeCurrent = moment().format();
+
           let timeCheck = timeCurrent[timeCurrent.length - 14];
           if (timeCheck === "0") {
             timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
@@ -936,22 +937,21 @@ async function gsrun(cl) {
 
           let timeCurrent = moment().format();
 
-          let dateCheck = timeCurrent[timeCurrent.length - 14];
-          if (dateCheck === "0") {
-            dateCheck = Number(timeCurrent[timeCurrent.length - 13]);
+          let timeCheck = timeCurrent[timeCurrent.length - 14];
+          if (timeCheck === "0") {
+            timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
           } else {
-            dateCheck = Number(
+            timeCheck = Number(
               timeCurrent[timeCurrent.length - 14] +
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          // if (dateCheck >= 16) {
-          //   dateCheck = 8;
-          // } else {
-          //   dateCheck = dateCheck + 8;
-          // }
+          if (timeCheck >= 16) {
+            timeCheck = 8;
+          } else {
+            timeCheck = timeCheck + 8;
+          }
 
-          console.log(dateCheck);
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${listSheet[0]}!A4:A`,
@@ -978,7 +978,7 @@ async function gsrun(cl) {
               row = row + 1;
             }
 
-            if (Number(time) === Number(dateCheck)) {
+            if (Number(time) === Number(timeCheck)) {
               //  console.log(row);
               break;
             }
