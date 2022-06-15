@@ -68,7 +68,7 @@ const client = new google.auth.JWT(
   GOOGLE_PRIVATE_KEY,
   ["https://www.googleapis.com/auth/spreadsheets"]
 );
-console.log(moment().format());
+//console.log(moment().format());
 client.authorize(function (err, tokens) {
   if (err) {
     console.log(err);
@@ -146,7 +146,7 @@ async function gsrun(cl) {
     }
     //dateCheck = dateCheck + 8
 
-    if (dateCheck < 8) {
+    if (dateCheck > 16) {
       columns = columns + 1;
     }
     //---------------------------
@@ -247,7 +247,7 @@ async function gsrun(cl) {
           }
           //dateCheck = dateCheck + 8
 
-          if (dateCheck < 8) {
+          if (dateCheck > 16) {
             columns = columns + 1;
           }
           //---------------------------
@@ -297,7 +297,7 @@ async function gsrun(cl) {
           }
           //dateCheck = dateCheck + 8
 
-          if (dateCheck < 8) {
+          if (dateCheck > 16) {
             columns = columns + 1;
           }
           //---------------------------
@@ -753,7 +753,7 @@ async function gsrun(cl) {
       }
       //dateCheck = dateCheck + 8
 
-      if (dateCheck < 8) {
+      if (dateCheck > 16) {
         columns = columns + 1;
       }
       //---------------------------
@@ -896,7 +896,7 @@ async function gsrun(cl) {
           }
           //dateCheck = dateCheck + 8
 
-          if (dateCheck < 8) {
+          if (dateCheck > 16) {
             columns = columns + 1;
           }
           //---------------------------
@@ -1475,7 +1475,7 @@ async function gsrun(cl) {
         }
         //dateCheck = dateCheck + 8
 
-        if (dateCheck < 8) {
+        if (dateCheck > 16) {
           columns = columns + 1;
         }
         //---------------------------
@@ -1525,7 +1525,7 @@ async function gsrun(cl) {
         }
         //dateCheck = dateCheck + 8
 
-        if (dateCheck < 8) {
+        if (dateCheck > 16) {
           columns = columns + 1;
         }
         //---------------------------
