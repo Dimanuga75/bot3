@@ -928,7 +928,7 @@ async function gsrun(cl) {
         } else if (checkMessage == currentDay) {
           console.log("Я в текущей дате");
           indexDate = chose.update.message.text;
-          // let timeCurrent = new Date().toString();
+
           let timeCurrent = moment().format();
           console.log(moment().format());
           let dateCheck = timeCurrent[timeCurrent.length - 14];
