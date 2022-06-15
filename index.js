@@ -365,7 +365,7 @@ async function gsrun(cl) {
 
           //Определяем занятое время
           let timeArr = [];
-          for (i = row + 1; i < numberRecords; i++) {
+          for (i = row + 2; i < numberRecords; i++) {
             if (timeColumn.data.values[i] == "") {
             } else {
               let itemss = timeArray[i];
@@ -990,7 +990,7 @@ async function gsrun(cl) {
           //console.log(timeColumn);
           //Определяем свободное время
           let timeArr = [];
-          for (i = row + 1; i < numberRecords + 4; i++) {
+          for (i = row + 2; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
               let itemss = timeArray[i];
               timeArr = timeArr.concat(itemss);
@@ -1570,8 +1570,6 @@ async function gsrun(cl) {
           );
         }
         dateCheck = dateCheck + 8;
-        //console.log(dateCheck);
-        //console.log(timeCurrent);
         let timeSheets = numberRecordsArr.data.values.flat();
         let time = "";
         let row = 0;
@@ -1609,7 +1607,7 @@ async function gsrun(cl) {
         //console.log(timeColumn);
         //Определяем свободное время
         let timeArr = [];
-        for (i = row + 1; i < numberRecords + 4; i++) {
+        for (i = row + 2; i < numberRecords + 4; i++) {
           if (timeColumn.data.values[i] == "") {
             let itemss = timeArray[i];
             timeArr = timeArr.concat(itemss);
