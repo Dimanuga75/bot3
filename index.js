@@ -1285,6 +1285,7 @@ async function gsrun(cl) {
                 indexDate[indexDate.length - 5] +
                 indexDate[indexDate.length - 4];
             }
+
             let monthRec = indexDate[indexDate.length - 2];
             if (monthRec === "0") {
               monthRec = indexDate[indexDate.length - 1] - 1;
