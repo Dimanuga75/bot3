@@ -930,6 +930,7 @@ async function gsrun(cl) {
           indexDate = chose.update.message.text;
           // let timeCurrent = new Date().toString();
           let timeCurrent = moment().format();
+          console.log(moment().format());
           let dateCheck = timeCurrent[timeCurrent.length - 14];
           if (dateCheck === "0") {
             dateCheck = Number(timeCurrent[timeCurrent.length - 13]);
@@ -940,6 +941,7 @@ async function gsrun(cl) {
             );
           }
           dateCheck = dateCheck + 8;
+          console.log(dateCheck);
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${listSheet[0]}!A4:A`,
@@ -967,10 +969,11 @@ async function gsrun(cl) {
             }
 
             if (Number(time) === dateCheck) {
-              // console.log(row);
+              console.log(row);
               break;
             }
           }
+          // Определим колонку с текущей датой
           let column = 1;
           for (let i = 0; i < dateArr.length; i++) {
             if (indexDate === dateSheets[i]) {
@@ -978,7 +981,7 @@ async function gsrun(cl) {
               break;
             }
           }
-          // Определили колонку с выбранной датой
+
           indexColumn = column;
           //console.log(column);
           let timeColumn = await gsapi.spreadsheets.values.get({
