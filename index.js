@@ -61,6 +61,7 @@ const { google } = require("googleapis");
 const idSheets = process.env.ID_SHEETS;
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY;
 const GOOGLE_CLIENT_EMAIL = process.env.GOOGLE_CLIENT_EMAIL;
+console.log(GOOGLE_CLIENT_EMAIL);
 const client = new google.auth.JWT(
   GOOGLE_CLIENT_EMAIL,
   null,
