@@ -940,7 +940,12 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          if (dateCheck >= 16) {
+            dateCheck = dateCheck - 16;
+          } else {
+            dateCheck = dateCheck + 8;
+          }
+
           console.log(dateCheck);
           let numberRecordsArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
