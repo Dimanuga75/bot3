@@ -17,6 +17,7 @@ const removeChoice = new Scenes.BaseScene("removeChoice");
 const recordClient = new Scenes.BaseScene("recordClient");
 const nameClientSce = new Scenes.BaseScene("nameClientSce");
 const removeChoiceAdmin = new Scenes.BaseScene("removeChoiceAdmin");
+const worker = new Scenes.BaseScene("work");
 const stage = new Stage([
   startScene,
   black,
@@ -24,10 +25,15 @@ const stage = new Stage([
   recordClient,
   nameClientSce,
   removeChoiceAdmin,
+  worker,
 ]);
 
 bot.use(Telegraf.log());
-let adminMenu = ["Записать клиента", "Удалить запись клиента"];
+let adminMenu = [
+  "Записать клиента",
+  "Удалить запись клиента",
+  "Работа с таблицей",
+];
 bot.use(session());
 bot.use(stage.middleware());
 bot.hears("/start", Stage.enter("startScene"));
@@ -38,6 +44,8 @@ bot.hears("старт", Stage.enter("recordClient"));
 bot.hears("1", Stage.enter("recordClient"));
 bot.hears("Указать имя клиента", Stage.enter("nameClientSce"));
 bot.hears("Новая запись", Stage.enter("recordClient"));
+bot.hears("Работа с таблицей", Stage.enter("work"));
+
 //bot.hears("Вернуться в начало", Stage.enter("recordClient"));
 bot.hears("/555", (ctx) =>
   ctx.reply(
@@ -45,7 +53,14 @@ bot.hears("/555", (ctx) =>
     Markup.keyboard(adminMenu).oneTime().resize()
   )
 );
+bot.hears("Вернуться в начальное меню", (ctx) =>
+  ctx.reply(
+    "Выбирайте по кнопкам",
+    Markup.keyboard(adminMenu).oneTime().resize()
+  )
+);
 bot.hears("Удалить запись клиента", Stage.enter("removeChoiceAdmin"));
+bot.hears("Выбрать еще мастера", Stage.enter("work"));
 
 //bot.help((ctx) => ctx.reply("Send me a sticker"));
 //bot.on("sticker", (ctx) => ctx.reply("👍"));
@@ -85,6 +100,12 @@ async function gsrun(cl) {
     metaData = await gsapi.spreadsheets.get({
       spreadsheetId: idSheets,
     });
+    let listId = new Array();
+    for (i = 2; i < metaData.data.sheets.length; i++) {
+      listId.push(metaData.data.sheets[i].properties.sheetId);
+    }
+    // console.log(listId);
+
     // Формируем список первых двух рабочих листов
 
     let listSetting = new Array();
@@ -122,7 +143,7 @@ async function gsrun(cl) {
     }
     //---------------------------------------------
     // Определяем текущую дату из строки 2 с датами
-
+    //Получаем номер колонки с текущей датой
     let columns = 1;
     for (let i = 0; i < dateArr.length; i++) {
       if (
@@ -144,16 +165,21 @@ async function gsrun(cl) {
           timeCurrentcheck[timeCurrentcheck.length - 13]
       );
     }
-    //dateCheck = dateCheck + 8
 
     if (dateCheck > 16) {
       columns = columns + 1;
     }
+    // ------------------------------------
+
+    let dateAfterCurrentDate = dateArr.length - columns;
+
     //---------------------------
     //Получаем значение текущей даты
     let dataColumn = await gsapi.spreadsheets.values.get({
       spreadsheetId: idSheets,
-      range: `${listSheet[0]}!R3C${columns}:R3C${columns + 7}`,
+      range: `${listSheet[0]}!R3C${columns}:R3C${
+        columns + dateAfterCurrentDate
+      }`,
     });
     let dateList = dataColumn.data.values.flat();
     let currentDay = dateList[0];
@@ -248,11 +274,14 @@ async function gsrun(cl) {
           if (dateCheck > 16) {
             columns = columns + 1;
           }
+          let dateAfterCurrentDate = dateArr.length - columns;
           //---------------------------
           //Получаем значение текущей даты
           let dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
-            range: `${listSheet[0]}!R3C${columns}:R3C${columns + 30}`,
+            range: `${listSheet[0]}!R3C${columns}:R3C${
+              columns + dateAfterCurrentDate
+            }`,
           });
           dateList = dataColumn.data.values.flat();
           dateListButton = anotherMaster.concat(dateList);
@@ -315,7 +344,7 @@ async function gsrun(cl) {
           }
 
           let column = 1;
-          for (let i = 0; i < dateArr.length; i++) {
+          for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
               column = column + i;
               break;
@@ -355,7 +384,7 @@ async function gsrun(cl) {
         } else if (dateList.includes(checkMessage)) {
           indexDate = chose.update.message.text;
           let column = 1;
-          for (let i = 0; i < dateArr.length; i++) {
+          for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
               column = column + i;
               break;
@@ -681,9 +710,9 @@ async function gsrun(cl) {
       });
       // Проверяем на черный список
       serviceList = dataBase.data.valueRanges[0].values.flat();
-      let numberRecords = dataBase.data.valueRanges[1].values.length;
-      let timeArray = dataBase.data.valueRanges[1].values.flat();
-      let dateSheets = dataBase.data.valueRanges[2].values.flat();
+      //let numberRecords = dataBase.data.valueRanges[1].values.length;
+      //let timeArray = dataBase.data.valueRanges[1].values.flat();
+      //let dateSheets = dataBase.data.valueRanges[2].values.flat();
       let dateArr = dataBase.data.valueRanges[3].values.flat();
       let priceList = dataBase.data.valueRanges[4].values.flat();
       let blackList = dataBase.data.valueRanges[5].values.flat();
@@ -724,11 +753,13 @@ async function gsrun(cl) {
       if (dateCheck > 16) {
         columns = columns + 1;
       }
+      //let dateAfterCurrentDate = dateArr.length - columns;
       //---------------------------
+      console.log(dateArr.length);
       //Получаем значение текущей даты
       dataColumn = await gsapi.spreadsheets.values.get({
         spreadsheetId: idSheets,
-        range: `${listSheet[0]}!R3C${columns}:R3C${columns + 30}`,
+        range: `${listSheet[0]}!R3C${columns}:R3C${dateArr.length}`,
       });
       dateList = dataColumn.data.values.flat();
       dateListButton = anotherMaster.concat(dateList);
@@ -878,13 +909,13 @@ async function gsrun(cl) {
           //Получаем значение текущей даты
           dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
-            range: `${indexMaster}!R3C${columns}:R3C${columns + 7}`,
+            range: `${indexMaster}!R3C${columns}:R3C${dateArr.length}`,
           });
           //  ---------------------------------------
-          indexColumn = columns + 7;
+          // indexColumn = columns + 7;
           let dateFree = [];
           // Ищем свободные даты
-          for (i = columns; i <= indexColumn; i++) {
+          for (i = columns; i <= dateArr.length; i++) {
             let timeFreeBase = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
               range: [`${indexMaster}!R4C${i}:R${numberRecords + 4}C${i}`],
@@ -916,7 +947,6 @@ async function gsrun(cl) {
             Markup.keyboard(dateListButton).oneTime().resize()
           );
         } else if (checkMessage == currentDay) {
-          // console.log("Я в текущей дате");
           indexDate = chose.update.message.text;
 
           let timeCurrent = moment().format();
@@ -935,29 +965,24 @@ async function gsrun(cl) {
           } else {
             timeCheck = timeCheck + 8;
           }
-
-          let numberRecordsArr = await gsapi.spreadsheets.values.get({
+          let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
             spreadsheetId: idSheets,
-            range: `${listSheet[0]}!A4:A`,
+            ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
           });
-          numberRecords = numberRecordsArr.data.values.length;
-          let dateSheetsArr = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: `${listSheet[0]}!3:3`,
-          });
-          dateSheets = dateSheetsArr.data.values.flat();
-          timeArray = numberRecordsArr.data.values.flat();
+          dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+          numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+          timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
 
-          let timeSheets = numberRecordsArr.data.values.flat();
+          // let timeSheets = dataBaseSheet.data.valueRanges[0].values.flat();
           let time = "";
           let row = 0;
-          for (i = 0; i < timeSheets.length; i++) {
-            if (timeSheets[i][0] === "1") {
-              time = timeSheets[i][0] + timeSheets[i][1];
+          for (i = 0; i < timeArray.length; i++) {
+            if (timeArray[i][0] === "1") {
+              time = timeArray[i][0] + timeArray[i][1];
               //  console.log(Number(time));
               row = row + 1;
             } else {
-              time = timeSheets[i][0];
+              time = timeArray[i][0];
               //  console.log(Number(time));
               row = row + 1;
             }
@@ -969,7 +994,7 @@ async function gsrun(cl) {
           }
           // Определим колонку с текущей датой
           let column = 1;
-          for (let i = 0; i < dateArr.length; i++) {
+          for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
               column = column + i;
               break;
@@ -1015,19 +1040,16 @@ async function gsrun(cl) {
               "\n" +
               "Проверяю наличие свободного времени на данную дату..."
           );
-          let numberRecordsArr = await gsapi.spreadsheets.values.get({
+          let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
             spreadsheetId: idSheets,
-            range: `${indexMaster}!A4:A`,
+            ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
           });
-          numberRecords = numberRecordsArr.data.values.length;
-          let dateSheetsArr = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: `${indexMaster}!3:3`,
-          });
-          dateSheets = dateSheetsArr.data.values.flat();
-          timeArray = numberRecordsArr.data.values.flat();
+          dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+          numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+          timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
+
           let column = 1;
-          for (let i = 0; i < dateArr.length; i++) {
+          for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
               column = column + i;
 
@@ -1489,12 +1511,12 @@ async function gsrun(cl) {
         //Получаем значение текущей даты
         dataColumn = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
-          range: `${indexMaster}!R3C${columns}:R3C${columns + 7}`,
+          range: `${indexMaster}!R3C${columns}:R3C${dateArr.length}`,
         });
-        indexColumn = columns + 7;
+        //  indexColumn = columns + 7;
         let dateFree = [];
         // Ищем свободные даты
-        for (i = columns; i <= indexColumn; i++) {
+        for (i = columns; i <= dateArr.length; i++) {
           let timeFreeBase = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: [`${indexMaster}!R4C${i}:R${numberRecords + 4}C${i}`],
@@ -1524,19 +1546,26 @@ async function gsrun(cl) {
           Markup.keyboard(dateListButton).oneTime().resize()
         );
       } else if (checkMessage == currentDay) {
-        console.log("Я в текущей дате");
+        //  console.log("Я в текущей дате");
         indexDate = chose.update.message.text;
-        let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!A4:A`,
+        //  });
+        //  numberRecords = numberRecordsArr.data.values.length;
+        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!3:3`,
+        //  });
+        //  dateSheets = dateSheetsArr.data.values.flat();
+        //  timeArray = numberRecordsArr.data.values.flat();
+        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
-          range: `${listSheet[0]}!A4:A`,
+          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
         });
-        numberRecords = numberRecordsArr.data.values.length;
-        let dateSheetsArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSheet[0]}!3:3`,
-        });
-        dateSheets = dateSheetsArr.data.values.flat();
-        timeArray = numberRecordsArr.data.values.flat();
+        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
         let timeCurrent = moment().format();
         let dateCheck = timeCurrent[timeCurrent.length - 14];
         if (dateCheck === "0") {
@@ -1548,16 +1577,16 @@ async function gsrun(cl) {
           );
         }
         dateCheck = dateCheck + 8;
-        let timeSheets = numberRecordsArr.data.values.flat();
+        //  let timeSheets = numberRecordsArr.data.values.flat();
         let time = "";
         let row = 0;
-        for (i = 0; i < timeSheets.length; i++) {
-          if (timeSheets[i][0] === "1") {
-            time = timeSheets[i][0] + timeSheets[i][1];
+        for (i = 0; i < timeArray.length; i++) {
+          if (timeArray[i][0] === "1") {
+            time = timeArray[i][0] + timeArray[i][1];
             // console.log(Number(time));
             row = row + 1;
           } else {
-            time = timeSheets[i][0];
+            time = timeArray[i][0];
             // console.log(Number(time));
             row = row + 1;
           }
@@ -1567,7 +1596,7 @@ async function gsrun(cl) {
             break;
           }
         }
-        console.log(row);
+        //  console.log(row);
         let column = 1;
         for (let i = 0; i < dateArr.length; i++) {
           if (indexDate === dateSheets[i]) {
@@ -1606,17 +1635,24 @@ async function gsrun(cl) {
         //});
       } else if (dateList.includes(checkMessage)) {
         indexDate = chose.update.message.text;
-        let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!A4:A`,
+        //  });
+        //  numberRecords = numberRecordsArr.data.values.length;
+        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!3:3`,
+        //  });
+        //  dateSheets = dateSheetsArr.data.values.flat();
+        //  timeArray = numberRecordsArr.data.values.flat();
+        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
-          range: `${listSheet[0]}!A4:A`,
+          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
         });
-        numberRecords = numberRecordsArr.data.values.length;
-        let dateSheetsArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSheet[0]}!3:3`,
-        });
-        dateSheets = dateSheetsArr.data.values.flat();
-        timeArray = numberRecordsArr.data.values.flat();
+        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
         let column = 1;
         for (let i = 0; i < dateArr.length; i++) {
           if (indexDate === dateSheets[i]) {
@@ -1627,7 +1663,7 @@ async function gsrun(cl) {
 
         // Определили колонку с выбранной датой
         indexColumn = column;
-        console.log(column);
+        //  console.log(column);
         let timeColumn = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
           range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
@@ -1655,19 +1691,26 @@ async function gsrun(cl) {
         );
         //});
       } else if (anotherTime.includes(checkMessage)) {
-        let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!A4:A`,
+        //  });
+        //  numberRecords = numberRecordsArr.data.values.length;
+        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
+        //    spreadsheetId: idSheets,
+        //    range: `${listSheet[0]}!3:3`,
+        //  });
+        //  dateSheets = dateSheetsArr.data.values.flat();
+        //  timeArray = numberRecordsArr.data.values.flat();
+        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
-          range: `${listSheet[0]}!A4:A`,
+          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
         });
-        numberRecords = numberRecordsArr.data.values.length;
-        let dateSheetsArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSheet[0]}!3:3`,
-        });
-        dateSheets = dateSheetsArr.data.values.flat();
-        timeArray = numberRecordsArr.data.values.flat();
+        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
         let column = 1;
-        for (let i = 0; i < dateArr.length; i++) {
+        for (let i = 0; i < dateSheets.length; i++) {
           if (indexDate === dateSheets[i]) {
             column = column + i;
             break;
@@ -1852,8 +1895,7 @@ async function gsrun(cl) {
     //  Удаление записи клиентом
     removeChoice.enter(async (chose) => {
       let removeConfirmChoice = ["Да, удалить", "Запись не удалять"];
-      // let removeConfirm = ["Да, удалить"];
-      // let noremoveConfirm = ["Запись не удалять"];
+
       chose.telegram.sendMessage(
         chose.chat.id,
         'Для удаления записи нажмите на кнопку "Да, удалить". Если вы нажали ошибочно, нажмите "Запись не удалять"',
@@ -1968,6 +2010,207 @@ async function gsrun(cl) {
         );
         return chose.scene.leave();
       }
+    });
+    worker.enter(async (ctx) => {
+      let menuAdmin = ["Выбрать еще мастера"];
+      let backMenu = ["Вернуться в начальное меню"];
+
+      //Получаем ID листов
+      let numberCol = 0;
+      let listId = new Array();
+      for (i = 2; i < metaData.data.sheets.length; i++) {
+        listId.push(metaData.data.sheets[i].properties.sheetId);
+      }
+
+      ctx.reply(
+        "Выберите мастера",
+        Markup.keyboard(listSheet).oneTime().resize()
+      );
+      worker.on("message", async (ctx) => {
+        let answerMaster = ctx.update.message.text;
+        let indexId = 0;
+        let indexIdSheets;
+        let menuAdmin1 = menuAdmin.concat(backMenu);
+
+        for (i = 0; i < listSheet.length; i++) {
+          if (answerMaster == listSheet[i]) {
+            indexId = i;
+            indexIdSheets = listId[i];
+            break;
+          }
+        }
+
+        if (listSheet.includes(answerMaster)) {
+          let dataColumnAll = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${answerMaster}!2:2`,
+          });
+          let dataColumnArr = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${answerMaster}!3:3`,
+          });
+          let dataColumnArrOne = dataColumnArr.data.values.flat()[1];
+          //---------------------------------------------
+          // Определяем текущую дату из строки 2 с датами
+          //Получаем номер колонки с текущей датой
+          let columns = 1;
+          for (let i = 0; i < dataColumnAll.data.values.flat().length; i++) {
+            if (
+              new Date().getMonth() + 1 + "/" + new Date().getDate() ===
+              dataColumnAll.data.values.flat()[i]
+            ) {
+              columns = columns + i;
+              break;
+            }
+          }
+
+          // ---------------------------
+          let timeCurrentcheck = moment().format();
+          let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+          if (dateCheck === "0") {
+            dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
+          } else {
+            dateCheck = Number(
+              timeCurrentcheck[timeCurrentcheck.length - 14] +
+                timeCurrentcheck[timeCurrentcheck.length - 13]
+            );
+          }
+
+          if (dateCheck > 16) {
+            columns = columns + 1;
+          }
+
+          if (
+            dataColumnAll.data.values.flat()[columns - 1] ==
+            dataColumnAll.data.values.flat()[1]
+          ) {
+            ctx.reply(
+              "Вы пытаетесь удалить текущую дату. Обработайте таблицу у другого мастера или вернитесь в начальное меню",
+              Markup.keyboard(menuAdmin1).oneTime().resize()
+            );
+            return ctx.scene.leave();
+          } else {
+            //---------------------------
+            //Определяем последнюю колонку в таблице
+
+            let endIndex = dataColumnAll.data.values.flat().length;
+            let startIndex = endIndex - 1;
+
+            let recordsNewDate = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: [`${answerMaster}!B1:B1`],
+            });
+            numberCol = Number(recordsNewDate.data.values.flat()[0]) + 1;
+            // console.log(numberCol);
+            let recordDateNew = {
+              range: `${answerMaster}!B1:B2`,
+              values: [[numberCol], ["=A1+B1"]],
+            };
+            const updateDateNew = {
+              spreadsheetId: idSheets,
+              valueInputOption: "USER_ENTERED",
+              resource: { data: [recordDateNew] },
+            };
+
+            let recordDateNew2 = { values: ["=B2+1"] };
+            const updateDateNew2 = {
+              spreadsheetId: idSheets,
+              range: `${answerMaster}!C2:C2`,
+              valueInputOption: "USER_ENTERED",
+              resource: { values: recordDateNew2 },
+            };
+            const resource = {
+              requests: [
+                {
+                  deleteDimension: {
+                    range: {
+                      sheetId: indexIdSheets,
+                      dimension: "COLUMNS",
+                      startIndex: 2,
+                      endIndex: 3,
+                    },
+                  },
+                },
+              ],
+            };
+            const resource1 = {
+              requests: [
+                {
+                  insertDimension: {
+                    range: {
+                      sheetId: indexIdSheets,
+                      dimension: "COLUMNS",
+                      startIndex: startIndex,
+                      endIndex: endIndex,
+                    },
+                    inheritFromBefore: true,
+                  },
+                },
+              ],
+            };
+            const response = await gsapi.spreadsheets.batchUpdate({
+              spreadsheetId: idSheets,
+              resource: resource,
+            });
+            const response1 = await gsapi.spreadsheets.batchUpdate({
+              spreadsheetId: idSheets,
+              resource: resource1,
+            });
+
+            let letterSheet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            //Здесь нужно посчитать на сколько дней в таблице записи
+            //let a = 13;
+            let index;
+            let indexNewColumns;
+            for (i = 0; i < letterSheet.length; i++) {
+              if (i === endIndex) {
+                index = letterSheet[i - 2];
+                indexNewColumns = letterSheet[i - 1];
+                break;
+              }
+            }
+
+            let record3 = {
+              values: [`=${indexNewColumns}2`],
+            };
+            let record4 = {
+              range: `${answerMaster}!${indexNewColumns}2:${indexNewColumns}3`,
+              values: [
+                [`=${index}2+1`],
+                [`=ПРОПИСН(ТЕКСТ(${indexNewColumns}2; "[$-F800]dddd dd.mm"))`],
+              ],
+            };
+            const updateOptions = {
+              spreadsheetId: idSheets,
+              valueInputOption: "USER_ENTERED",
+              resource: { data: [record4] },
+            };
+            await gsapi.spreadsheets.values.batchUpdate(updateOptions);
+
+            const updateOptions3 = {
+              spreadsheetId: idSheets,
+              range: `${answerMaster}!${indexNewColumns}27:${indexNewColumns}27`,
+              valueInputOption: "USER_ENTERED",
+              resource: { values: record3 },
+            };
+            await gsapi.spreadsheets.values.batchUpdate(updateDateNew);
+            await gsapi.spreadsheets.values.update(updateDateNew2);
+            await gsapi.spreadsheets.values.update(updateOptions3);
+            //  let menuAdmin = ["Выбрать еще мастера", "Вернуться в начальное меню"];
+            ctx.reply(
+              `Вы удалили следующую дату: ${dataColumnArrOne}. \nОбработайте таблицу у другого мастера или вернитесь в начальное меню`,
+              Markup.keyboard(menuAdmin1).oneTime().resize()
+            );
+            return ctx.scene.leave();
+          }
+        } else if (answerMaster == "Вернуться в начальное меню") {
+          ctx.reply(
+            "Выбирайте по кнопкам",
+            Markup.keyboard(adminMenu).oneTime().resize()
+          );
+          return ctx.scene.leave();
+        }
+      });
     });
   } catch (e) {
     console.error(e);
