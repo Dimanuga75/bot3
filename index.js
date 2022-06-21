@@ -142,6 +142,25 @@ async function gsrun(cl) {
       textPrice = textPrice + `${serviceList[i]} - ` + `${priceList[i]}` + "\n";
     }
     //---------------------------------------------
+    // let dataColumn1 = await gsapi.spreadsheets.values.get({
+    //   spreadsheetId: idSheets,
+    //   range: `${listSheet[0]}!B3:N26`,
+    // });
+    // let dateList1 = dataColumn1.data.values;
+
+    // let dateFree = [];
+    // for (i = 0; i < 13; i++) {
+    //   //console.log(i);
+    //   for (b = 1; b < 24; b++) {
+    //     if (dateList1[b][i] == "") {
+    //       dateFree = dateFree.concat(dateList1[0][i]);
+
+    //       break;
+    //     }
+    //   }
+    // }
+
+    //------------------------------------------------------------/////////
     // Определяем текущую дату из строки 2 с датами
     //Получаем номер колонки с текущей датой
     let columns = 1;
@@ -915,21 +934,22 @@ async function gsrun(cl) {
           // indexColumn = columns + 7;
           let dateFree = [];
           // Ищем свободные даты
-          for (i = columns; i <= dateArr.length; i++) {
-            let timeFreeBase = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: [`${indexMaster}!R4C${i}:R${numberRecords + 4}C${i}`],
-            });
+          let dataColumn1 = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!B3:N26`,
+          });
+          let dateList = dataColumn1.data.values;
 
-            for (b = 0; b < numberRecords; b++) {
-              if (timeFreeBase.data.values[b] == "") {
-                // let itemDate = dateList[i - columns];
-                dateFree = dateFree.concat(dateList[i - columns]);
+          for (i = 0; i < 13; i++) {
+            //console.log(i);
+            for (b = 1; b < 24; b++) {
+              if (dateList[b][i] == "") {
+                dateFree = dateFree.concat(dateList[0][i]);
+
                 break;
               }
             }
           }
-
           dateListButton = anotherMaster.concat(dateFree);
           currentDay = dateList[0];
           chose.telegram.sendMessage(
@@ -973,7 +993,6 @@ async function gsrun(cl) {
           numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
           timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
 
-          // let timeSheets = dataBaseSheet.data.valueRanges[0].values.flat();
           let time = "";
           let row = 0;
           for (i = 0; i < timeArray.length; i++) {
@@ -1009,7 +1028,7 @@ async function gsrun(cl) {
               numberRecords + 4
             }C${column}`,
           });
-          //console.log(timeColumn);
+
           //Определяем свободное время
           let timeArr = [];
           for (i = row + 2; i < numberRecords + 4; i++) {
@@ -1516,14 +1535,18 @@ async function gsrun(cl) {
         //  indexColumn = columns + 7;
         let dateFree = [];
         // Ищем свободные даты
-        for (i = columns; i <= dateArr.length; i++) {
-          let timeFreeBase = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: [`${indexMaster}!R4C${i}:R${numberRecords + 4}C${i}`],
-          });
-          for (b = 0; b < numberRecords; b++) {
-            if (timeFreeBase.data.values[b] == "") {
-              dateFree = dateFree.concat(dateList[i - columns]);
+        let dataColumn1 = await gsapi.spreadsheets.values.get({
+          spreadsheetId: idSheets,
+          range: `${indexMaster}!B3:N26`,
+        });
+        let dateList = dataColumn1.data.values;
+
+        for (i = 0; i < 13; i++) {
+          //console.log(i);
+          for (b = 1; b < 24; b++) {
+            if (dateList[b][i] == "") {
+              dateFree = dateFree.concat(dateList[0][i]);
+
               break;
             }
           }
@@ -1546,19 +1569,24 @@ async function gsrun(cl) {
           Markup.keyboard(dateListButton).oneTime().resize()
         );
       } else if (checkMessage == currentDay) {
-        //  console.log("Я в текущей дате");
         indexDate = chose.update.message.text;
-        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!A4:A`,
-        //  });
-        //  numberRecords = numberRecordsArr.data.values.length;
-        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!3:3`,
-        //  });
-        //  dateSheets = dateSheetsArr.data.values.flat();
-        //  timeArray = numberRecordsArr.data.values.flat();
+
+        let timeCurrent = moment().format();
+
+        let timeCheck = timeCurrent[timeCurrent.length - 14];
+        if (timeCheck === "0") {
+          timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
+        } else {
+          timeCheck = Number(
+            timeCurrent[timeCurrent.length - 14] +
+              timeCurrent[timeCurrent.length - 13]
+          );
+        }
+        if (timeCheck >= 16) {
+          timeCheck = 8;
+        } else {
+          timeCheck = timeCheck + 8;
+        }
         let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
           ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
@@ -1566,52 +1594,41 @@ async function gsrun(cl) {
         dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
         numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
         timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
-        let timeCurrent = moment().format();
-        let dateCheck = timeCurrent[timeCurrent.length - 14];
-        if (dateCheck === "0") {
-          dateCheck = Number(timeCurrent[timeCurrent.length - 13]);
-        } else {
-          dateCheck = Number(
-            timeCurrent[timeCurrent.length - 14] +
-              timeCurrent[timeCurrent.length - 13]
-          );
-        }
-        dateCheck = dateCheck + 8;
-        //  let timeSheets = numberRecordsArr.data.values.flat();
+
         let time = "";
         let row = 0;
         for (i = 0; i < timeArray.length; i++) {
           if (timeArray[i][0] === "1") {
             time = timeArray[i][0] + timeArray[i][1];
-            // console.log(Number(time));
+            //  console.log(Number(time));
             row = row + 1;
           } else {
             time = timeArray[i][0];
-            // console.log(Number(time));
+            //  console.log(Number(time));
             row = row + 1;
           }
 
-          if (Number(time) === dateCheck) {
-            // console.log(row);
+          if (Number(time) === Number(timeCheck)) {
+            //  console.log(row);
             break;
           }
         }
-        //  console.log(row);
+        // Определим колонку с текущей датой
         let column = 1;
-        for (let i = 0; i < dateArr.length; i++) {
+        for (let i = 0; i < dateSheets.length; i++) {
           if (indexDate === dateSheets[i]) {
             column = column + i;
             break;
           }
         }
-        // Определили колонку с выбранной датой
+
         indexColumn = column;
         //console.log(column);
         let timeColumn = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
           range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
         });
-        //console.log(timeColumn);
+
         //Определяем свободное время
         let timeArr = [];
         for (i = row + 2; i < numberRecords + 4; i++) {
@@ -2014,7 +2031,13 @@ async function gsrun(cl) {
     worker.enter(async (ctx) => {
       let menuAdmin = ["Выбрать еще мастера"];
       let backMenu = ["Вернуться в начальное меню"];
-
+      //---------------------------
+      let dataColumnAll = await gsapi.spreadsheets.values.get({
+        spreadsheetId: idSheets,
+        range: `${listSheet[0]}!2:2`,
+      });
+      console.log(dataColumnAll.data.values.flat().length);
+      //-----------------------------
       //Получаем ID листов
       let numberCol = 0;
       let listId = new Array();
@@ -2091,11 +2114,11 @@ async function gsrun(cl) {
             return ctx.scene.leave();
           } else {
             //---------------------------
-            //Определяем последнюю колонку в таблице
+            //Определяем последнюю колонку с датой в таблице
 
-            let endIndex = dataColumnAll.data.values.flat().length;
+            let endIndex = dataColumnAll.data.values.flat().length - 1;
             let startIndex = endIndex - 1;
-
+            //Получаем контрольный индекс из таблицы
             let recordsNewDate = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
               range: [`${answerMaster}!B1:B1`],
@@ -2169,6 +2192,8 @@ async function gsrun(cl) {
                 break;
               }
             }
+            console.log(index);
+            console.log(indexNewColumns);
 
             let record3 = {
               values: [`=${indexNewColumns}2`],
