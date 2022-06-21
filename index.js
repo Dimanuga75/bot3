@@ -93,7 +93,8 @@ client.authorize(function (err, tokens) {
     gsrun(client);
   }
 });
-
+let timeCurrent1 = moment().format();
+console.log(timeCurrent1);
 async function gsrun(cl) {
   try {
     const gsapi = google.sheets({ version: "v4", auth: cl });
@@ -104,7 +105,6 @@ async function gsrun(cl) {
     for (i = 2; i < metaData.data.sheets.length; i++) {
       listId.push(metaData.data.sheets[i].properties.sheetId);
     }
-    // console.log(listId);
 
     // Формируем список первых двух рабочих листов
 
@@ -141,25 +141,6 @@ async function gsrun(cl) {
     for (i = 0; i < serviceList.length; i++) {
       textPrice = textPrice + `${serviceList[i]} - ` + `${priceList[i]}` + "\n";
     }
-    //---------------------------------------------
-    // let dataColumn1 = await gsapi.spreadsheets.values.get({
-    //   spreadsheetId: idSheets,
-    //   range: `${listSheet[0]}!B3:N26`,
-    // });
-    // let dateList1 = dataColumn1.data.values;
-
-    // let dateFree = [];
-    // for (i = 0; i < 13; i++) {
-    //   //console.log(i);
-    //   for (b = 1; b < 24; b++) {
-    //     if (dateList1[b][i] == "") {
-    //       dateFree = dateFree.concat(dateList1[0][i]);
-
-    //       break;
-    //     }
-    //   }
-    // }
-
     //------------------------------------------------------------/////////
     // Определяем текущую дату из строки 2 с датами
     //Получаем номер колонки с текущей датой
@@ -732,9 +713,7 @@ async function gsrun(cl) {
       });
       // Проверяем на черный список
       serviceList = dataBase.data.valueRanges[0].values.flat();
-      //let numberRecords = dataBase.data.valueRanges[1].values.length;
-      //let timeArray = dataBase.data.valueRanges[1].values.flat();
-      //let dateSheets = dataBase.data.valueRanges[2].values.flat();
+
       let dateArr = dataBase.data.valueRanges[3].values.flat();
       let priceList = dataBase.data.valueRanges[4].values.flat();
       let blackList = dataBase.data.valueRanges[5].values.flat();
@@ -770,14 +749,10 @@ async function gsrun(cl) {
             timeCurrentcheck[timeCurrentcheck.length - 13]
         );
       }
-      //dateCheck = dateCheck + 8
 
       if (dateCheck > 16) {
         columns = columns + 1;
       }
-      //let dateAfterCurrentDate = dateArr.length - columns;
-      //---------------------------
-      console.log(dateArr.length);
       //Получаем значение текущей даты
       dataColumn = await gsapi.spreadsheets.values.get({
         spreadsheetId: idSheets,
@@ -813,6 +788,8 @@ async function gsrun(cl) {
 
       recordClient.on("message", async (chose) => {
         checkMessage = chose.message.text;
+        //  console.log(checkMessage);
+        //  console.log(currentDay[0]);
         let metaData = await gsapi.spreadsheets.get({
           spreadsheetId: idSheets,
         });
@@ -922,39 +899,29 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          //dateCheck = dateCheck + 8
-
           if (dateCheck > 16) {
             columns = columns + 1;
           }
-          //---------------------------
-          //Получаем значение текущей даты
-          dataColumn = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: `${indexMaster}!R3C${columns}:R3C${dateArr.length}`,
-          });
-          //  ---------------------------------------
-          // indexColumn = columns + 7;
-          let dateFree = [];
-          // Ищем свободные даты
-          let dataColumn1 = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: `${indexMaster}!B3:N26`,
-          });
-          let dateList = dataColumn1.data.values;
 
-          for (i = 0; i < 13; i++) {
-            //console.log(i);
+          //Получаем значение текущей даты
+          // Ищем свободные даты
+          let dateFree = [];
+          let dataColumn = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!R3C${columns}:R26C${dateArr.length}`,
+          });
+          let dateList = dataColumn.data.values;
+          for (i = 0; i <= dateArr.length - columns; i++) {
             for (b = 1; b < 24; b++) {
               if (dateList[b][i] == "") {
                 dateFree = dateFree.concat(dateList[0][i]);
-
                 break;
               }
             }
           }
           dateListButton = anotherMaster.concat(dateFree);
-          currentDay = dateList[0];
+          currentDay = dateList[0][0];
+
           chose.telegram.sendMessage(
             chose.chat.id,
             "🗓Свободные дни. На какую дату вас записать?",
@@ -971,7 +938,7 @@ async function gsrun(cl) {
           );
         } else if (checkMessage == currentDay) {
           indexDate = chose.update.message.text;
-
+          // console.log("Я в текущей дате");
           let timeCurrent = moment().format();
 
           let timeCheck = timeCurrent[timeCurrent.length - 14];
@@ -1010,7 +977,7 @@ async function gsrun(cl) {
             }
 
             if (Number(time) === Number(timeCheck)) {
-              //  console.log(row);
+              console.log(row);
               break;
             }
           }
@@ -1040,6 +1007,7 @@ async function gsrun(cl) {
               timeArr = timeArr.concat(itemss);
             }
           }
+
           //Добавлем к массиву времени возврат к дате
           let items = timeArr;
           let itemsDop = ["Выбрать другую дату"];
@@ -1055,6 +1023,7 @@ async function gsrun(cl) {
           //});
         } else if (dateList.includes(checkMessage)) {
           indexDate = chose.update.message.text;
+          console.log("Я тут .......");
           chose.telegram.sendMessage(
             chose.chat.id,
             "Вы выбрали дату: " +
@@ -1498,7 +1467,7 @@ async function gsrun(cl) {
             "\n" +
             "Проверяю наличие свободных дат для записи"
         );
-        // Определяем текущую дату из строки 2 с датами
+        // Определяем колонку с текущей датой из строки 2 с датами
         dataSheets = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
           range: `${indexMaster}!2:2`,
@@ -1531,20 +1500,16 @@ async function gsrun(cl) {
         }
         //---------------------------
         //Получаем значение текущей даты
-        dataColumn = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R3C${columns}:R3C${dateArr.length}`,
-        });
-        //  indexColumn = columns + 7;
-        let dateFree = [];
         // Ищем свободные даты
+        let dateFree = [];
         let dataColumn1 = await gsapi.spreadsheets.values.get({
           spreadsheetId: idSheets,
-          range: `${indexMaster}!B3:N26`,
+          range: `${indexMaster}!R3C${columns}:R26C${dateArr.length}`,
         });
         let dateList = dataColumn1.data.values;
-
-        for (i = 0; i < 13; i++) {
+        //  console.log(dateArr.length);
+        //  console.log(columns);
+        for (i = 0; i <= dateArr.length - columns; i++) {
           //console.log(i);
           for (b = 1; b < 24; b++) {
             if (dateList[b][i] == "") {
@@ -1554,9 +1519,10 @@ async function gsrun(cl) {
             }
           }
         }
-        dateList = dataColumn.data.values.flat();
+        //  dateList = dataColumn.data.values.flat();
         dateListButton = anotherMaster.concat(dateFree);
-        currentDay = dateList[0];
+        currentDay = dateList[0][0];
+        //  console.log(currentDay);
         chose.telegram.sendMessage(
           chose.chat.id,
           "Свободные даты. Уточните, на какую дату записать клиента",
