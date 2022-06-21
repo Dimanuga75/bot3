@@ -213,7 +213,7 @@ async function gsrun(cl) {
     let priceButton = ["Прайс лист"];
     let serviceChoice = ["Выбрать услугу", "Выбрать другую услугу"];
     let serviceButton = ["Выбрать услугу"];
-    let pointNameClient = ["Указать имя клиента"];
+    let pointNameClient = ["Указать имя клиента", "Выбрать другое время ☝️"];
     let clientRecord = ["Записать клиента"];
     let confirmRecordAdmin = ["Подтвердить запись клиента"];
     let recordNewButton = ["Новая запись"];
@@ -489,7 +489,10 @@ async function gsrun(cl) {
               break;
             }
           }
-          let buttonTime = ["Удалить выбранную запись", "Выбрать другое время"];
+          let buttonTime = [
+            "Удалить выбранную запись",
+            "Выбрать другое время ☝️",
+          ];
 
           chose.telegram.sendMessage(
             chose.chat.id,
