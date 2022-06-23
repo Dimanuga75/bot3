@@ -42,6 +42,7 @@ bot.hears("Удалить запись", Stage.enter("removeChoice"));
 bot.hears("запись", Stage.enter("recordClient"));
 bot.hears("старт", Stage.enter("recordClient"));
 bot.hears("1", Stage.enter("recordClient"));
+bot.hears("/run", Stage.enter("recordClient"));
 bot.hears("Указать имя клиента", Stage.enter("nameClientSce"));
 bot.hears("Новая запись", Stage.enter("recordClient"));
 bot.hears("Работа с таблицей", Stage.enter("work"));
@@ -184,7 +185,7 @@ async function gsrun(cl) {
     let dateList = dataColumn.data.values.flat();
     let currentDay = dateList[0];
 
-    let startBot = ["старт", "запись", "Вернуться в начало", "1"];
+    let startBot = ["старт", "запись", "Вернуться в начало", "1", "/run"];
     let anotherMaster = ["Выбрать другого мастера"];
     let confirmEntry = ["Подтвердить запись ✅"];
     let anotherService = ["Выбрать другую услугу"];
@@ -538,6 +539,8 @@ async function gsrun(cl) {
 
     //Начальная сцена (команда /start)
     startScene.enter(async (ctx) => {
+      text = ctx.message.text;
+      console.log(text);
       nameClient = ctx.chat.first_name;
       idClient = ctx.chat.id.toString();
       let check = ctx.chat.id.toString();
@@ -657,7 +660,9 @@ async function gsrun(cl) {
 
     //  Тело самого бота (работа с клиентом)
     recordClient.enter(async (chose) => {
+      //let startBot = ["старт", "запись", "Вернуться в начало", "1", "/run"];
       let checkMessage = chose.message.text;
+      console.log(checkMessage);
       nameClient = chose.chat.first_name;
       let check = chose.chat.id.toString();
       chose.reply("...");
@@ -811,6 +816,15 @@ async function gsrun(cl) {
 
         if (blackList.includes(check)) {
           return chose.scene.leave();
+        } else if (startBot.includes(checkMessage)) {
+          Array.prototype.push.apply(serviceList, priceButton);
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Приветствуем вас " +
+              `${nameClient}` +
+              ".\nВыберите на какую услугу вас записать 👇",
+            Markup.keyboard(serviceList).oneTime().resize()
+          );
         } else if (priceButton.includes(checkMessage)) {
           chose.telegram.sendMessage(
             chose.chat.id,
@@ -1365,7 +1379,7 @@ async function gsrun(cl) {
         } else {
           chose.telegram.sendMessage(
             chose.chat.id,
-            'Неизвестная команда ☝️. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
+            'Неизвестная команда. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
             Markup.keyboard(recordNewButton).oneTime().resize()
           );
           return chose.scene.leave();
