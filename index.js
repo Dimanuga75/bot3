@@ -165,8 +165,8 @@ async function gsrun(cl) {
           timeCurrentcheck[timeCurrentcheck.length - 13]
       );
     }
-
-    if (dateCheck > 16) {
+    dateCheck = dateCheck + 8;
+    if (dateCheck > 19) {
       columns = columns + 1;
     }
     // ------------------------------------
@@ -271,7 +271,8 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          if (dateCheck > 16) {
+          dateCheck = dateCheck + 8;
+          if (dateCheck > 19) {
             columns = columns + 1;
           }
           let dateAfterCurrentDate = dateArr.length - columns;
@@ -321,10 +322,9 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          if (timeCheck >= 16) {
+          timeCheck = timeCheck + 8;
+          if (timeCheck >= 19) {
             timeCheck = 8;
-          } else {
-            timeCheck = timeCheck + 8;
           }
 
           let time = "";
@@ -338,7 +338,7 @@ async function gsrun(cl) {
               row = row + 1;
             }
 
-            if (Number(time) === timeCheck) {
+            if (Number(time) === Number(timeCheck)) {
               break;
             }
           }
@@ -539,7 +539,7 @@ async function gsrun(cl) {
     //Начальная сцена (команда /start)
     startScene.enter(async (ctx) => {
       nameClient = ctx.chat.first_name;
-      idClient = ctx.chat.id;
+      idClient = ctx.chat.id.toString();
       let check = ctx.chat.id.toString();
       let metaData = await gsapi.spreadsheets.get({
         spreadsheetId: idSheets,
@@ -551,13 +551,7 @@ async function gsrun(cl) {
       }
       let dataBaseStart = await gsapi.spreadsheets.values.batchGet({
         spreadsheetId: idSheets,
-        ranges: [
-          `${listSetting[0]}!D1:D`,
-          //  `${listSheet[0]}!A4:A`,
-          //  `${listSheet[0]}!3:3`,
-          //  `${listSheet[0]}!2:2`,
-          `${listSetting[0]}!A1:A`,
-        ],
+        ranges: [`${listSetting[0]}!D1:D`, `${listSetting[0]}!A1:A`],
       });
       // Формируем черный список
       let blackList = dataBaseStart.data.valueRanges[0].values.flat();
@@ -566,54 +560,37 @@ async function gsrun(cl) {
       if (blackList.includes(check)) {
         return ctx.scene.leave();
       }
-
-      if (
-        dataBaseStart.data.valueRanges[1].values.flat().includes(`${idClient}`)
-      ) {
-        ctx.reply("Приветствуем вас " + `${nameClient}`) + ". ";
+      let dateRecord = {
+        values: [`${idClient}`, `${nameClient}`],
+      };
+      if (dataBaseStart.data.valueRanges[1].values.flat().includes(idClient)) {
         ctx.reply(
-          'Для записи на услугу нажмите на кнопку "Новая запись" или напишите сообщение "запись" (пишем без кавычек)',
+          "Приветствуем вас " +
+            `${nameClient}` +
+            '.🙏 \nДля записи на услугу нажмите на кнопку "Новая запись" или напишите сообщение "запись" (пишем без кавычек).',
           Markup.keyboard(recordNewButton).oneTime().resize()
         );
         return ctx.scene.leave();
       } else {
-        await ctx.reply(
-          "Приветствуем вас " + `${nameClient}` + ". Введите ваш номер телефона"
+        const updateOptions = {
+          spreadsheetId: idSheets,
+          range: `${listSetting[0]}!R${numberClient + 1}C1:R${
+            numberClient + 1
+          }C3`,
+          valueInputOption: "USER_ENTERED",
+          resource: { values: dateRecord },
+        };
+        await gsapi.spreadsheets.values.update(updateOptions);
+        //if (
+        //  dataBaseStart.data.valueRanges[1].values.flat().includes(`${idClient}`)
+        //) {
+        ctx.reply(
+          "Приветствуем вас " +
+            `${nameClient}` +
+            '.🙏 \nДля записи на услугу нажмите на кнопку "Новая запись" или напишите сообщение "запись" (пишем без кавычек).',
+          Markup.keyboard(recordNewButton).oneTime().resize()
         );
-        startScene.on("message", async (ctx) => {
-          let indexPhone = ctx.update.message.text;
-          let reg =
-            /^(\+)?((\d{2,3}) ?\d|\d)(([ -]?\d)|( ?(\d{2,3}) ?)){5,12}\d$/;
-          if (
-            reg.test(indexPhone) &&
-            indexPhone.length <= 11 &&
-            indexPhone.length >= 10
-          ) {
-            idClient = ctx.chat.id;
-            nameClient = ctx.chat.first_name;
-            ctx.reply(
-              'Отлично. Для записи на услугу нажмите на кнопку "Новая запись" или напишите сообщение "запись" (пишем без кавычек)',
-              Markup.keyboard(recordNewButton).oneTime().resize()
-            );
-            let dateRecord = {
-              values: [`${idClient}`, `${nameClient}`, `${indexPhone}`],
-            };
-            const updateOptions = {
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!R${numberClient + 1}C1:R${
-                numberClient + 1
-              }C3`,
-              valueInputOption: "USER_ENTERED",
-              resource: { values: dateRecord },
-            };
-            await gsapi.spreadsheets.values.update(updateOptions);
-            return ctx.scene.leave();
-          } else {
-            ctx.reply(
-              "Номер введен в неверном формате. Введите номер телефона правильно"
-            );
-          }
-        });
+        return ctx.scene.leave();
       }
     });
     //Добавление в черный список -------------------
@@ -749,8 +726,8 @@ async function gsrun(cl) {
             timeCurrentcheck[timeCurrentcheck.length - 13]
         );
       }
-
-      if (dateCheck > 16) {
+      dateCheck = dateCheck + 8;
+      if (dateCheck > 19) {
         columns = columns + 1;
       }
       //Получаем значение текущей даты
@@ -773,15 +750,12 @@ async function gsrun(cl) {
           Markup.keyboard(serviceList).oneTime().resize()
         );
       } else if (startBot.includes(checkMessage)) {
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Приветствуем вас " + `${nameClient}` + ". "
-        );
         Array.prototype.push.apply(serviceList, priceButton);
-
         chose.telegram.sendMessage(
           chose.chat.id,
-          "Выберите на какую услугу вас записать 👇",
+          "Приветствуем вас " +
+            `${nameClient}` +
+            ".\nВыберите на какую услугу вас записать 👇",
           Markup.keyboard(serviceList).oneTime().resize()
         );
       }
@@ -899,7 +873,8 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          if (dateCheck > 16) {
+          dateCheck = dateCheck + 8;
+          if (dateCheck > 19) {
             columns = columns + 1;
           }
 
@@ -938,9 +913,8 @@ async function gsrun(cl) {
           );
         } else if (checkMessage == currentDay) {
           indexDate = chose.update.message.text;
-          // console.log("Я в текущей дате");
           let timeCurrent = moment().format();
-
+          console.log(moment().format());
           let timeCheck = timeCurrent[timeCurrent.length - 14];
           if (timeCheck === "0") {
             timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
@@ -950,10 +924,9 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          if (timeCheck >= 16) {
+          timeCheck = timeCheck + 8;
+          if (timeCheck >= 19) {
             timeCheck = 8;
-          } else {
-            timeCheck = timeCheck + 8;
           }
           let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
             spreadsheetId: idSheets,
@@ -1170,20 +1143,17 @@ async function gsrun(cl) {
               }
             }
 
-            let indexPhoneArr = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!R${scoreId + 2}C3:R${scoreId + 2}C3`,
-            });
-            indexPhone = indexPhoneArr.data.values.flat();
+            //let indexPhoneArr = await gsapi.spreadsheets.values.get({
+            //  spreadsheetId: idSheets,
+            //  range: `${listSetting[0]}!R${scoreId + 2}C3:R${scoreId + 2}C3`,
+            //});
+            //indexPhone = indexPhoneArr.data.values.flat();
 
             let dateRecord = {
               values: [
-                "Клиент: " +
-                  `${nameClient}` +
-                  "\nУслуга: " +
-                  `${indexService}` +
-                  "\nТелефон: " +
-                  `${indexPhone}`,
+                "Клиент: " + `${nameClient}` + "\nУслуга: " + `${indexService}`,
+                //"\nТелефон: " +
+                //`${indexPhone}`,
               ],
             };
             const updateOptions = {
@@ -1225,8 +1195,8 @@ async function gsrun(cl) {
                   `${indexDate}` +
                   "\nВремя записи: " +
                   `${indexTime}` +
-                  "\nТелефон: " +
-                  `${indexPhone}` +
+                  //"\nТелефон: " +
+                  //`${indexPhone}` +
                   "\nID: " +
                   `${chose.chat.id}`
               );
@@ -1317,18 +1287,17 @@ async function gsrun(cl) {
             }
             let hoursRec = indexTime[indexTime.length - 5];
             if (hoursRec === undefined) {
-              hoursRec = Number(indexTime[indexTime.length - 4]) + timeZone;
+              hoursRec = Number(indexTime[indexTime.length - 4]);
               //  console.log("ok");
             } else {
-              hoursRec =
-                Number(
-                  indexTime[indexTime.length - 5] +
-                    indexTime[indexTime.length - 4]
-                ) + timeZone;
+              hoursRec = Number(
+                indexTime[indexTime.length - 5] +
+                  indexTime[indexTime.length - 4]
+              );
             }
 
             let currentYear = new Date().getFullYear();
-            let currentDate = Date.now() + mmsHours * (timeZone - 1);
+            let currentDate = Date.now();
             let dateRecordsMM = new Date(
               currentYear,
               monthRec,
@@ -1336,8 +1305,8 @@ async function gsrun(cl) {
               hoursRec,
               minutesRec
             );
-            let intervalTime = dateRecordsMM - currentDate - mmsHours * 10;
-            console.log(intervalTime);
+            let intervalTime = dateRecordsMM - currentDate - mmsHours * 9;
+            console.log(intervalTime / mmsHours);
             if (intervalTime > 0) {
               setTimeout(async () => {
                 let clientBaseIdAr = await gsapi.spreadsheets.values.get({
@@ -1494,8 +1463,8 @@ async function gsrun(cl) {
               timeCurrentcheck[timeCurrentcheck.length - 13]
           );
         }
-
-        if (dateCheck > 16) {
+        dateCheck = dateCheck + 8;
+        if (dateCheck > 19) {
           columns = columns + 1;
         }
         //---------------------------
@@ -1551,10 +1520,9 @@ async function gsrun(cl) {
               timeCurrent[timeCurrent.length - 13]
           );
         }
-        if (timeCheck >= 16) {
+        timeCheck = timeCheck + 8;
+        if (timeCheck >= 19) {
           timeCheck = 8;
-        } else {
-          timeCheck = timeCheck + 8;
         }
         let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
@@ -2067,8 +2035,8 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-
-          if (dateCheck > 16) {
+          dateCheck = dateCheck + 8;
+          if (dateCheck > 19) {
             columns = columns + 1;
           }
 
