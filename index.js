@@ -185,7 +185,14 @@ async function gsrun(cl) {
     let dateList = dataColumn.data.values.flat();
     let currentDay = dateList[0];
 
-    let startBot = ["старт", "запись", "Вернуться в начало", "1", "/run"];
+    let startBot = [
+      "старт",
+      "запись",
+      "Вернуться в начало",
+      "1",
+      "/run",
+      "/start",
+    ];
     let anotherMaster = ["Выбрать другого мастера"];
     let confirmEntry = ["Подтвердить запись ✅"];
     let anotherService = ["Выбрать другую услугу"];
