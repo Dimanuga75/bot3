@@ -1272,7 +1272,7 @@ async function gsrun(cl) {
                 const updateOptions1 = {
                   spreadsheetId: idSheets,
                   range: `${listSetting[0]}!R${n + 1}C8:R${n + 1}C14`,
-                  valueInputOption: "USER_ENTERED",
+                  valueInputOption: "RAW",
                   resource: { values: dateRecordClientTable },
                 };
                 await gsapi.spreadsheets.values.update(updateOptions1);
@@ -1354,8 +1354,8 @@ async function gsrun(cl) {
                     console.log(indexTime);
                     console.log(indexDateCheck);
                     if (
-                      indexTime == indexTimeCheck &&
-                      indexDate == indexDateCheck
+                      indexDate === indexDateCheck &&
+                      indexTime === indexTimeCheck
                     ) {
                       chose.telegram.sendMessage(
                         chose.chat.id,
