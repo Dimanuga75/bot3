@@ -95,6 +95,7 @@ client.authorize(function (err, tokens) {
   }
 });
 let timeCurrent1 = moment().format();
+let timeZone = 0;
 console.log(timeCurrent1);
 async function gsrun(cl) {
   try {
@@ -166,7 +167,7 @@ async function gsrun(cl) {
           timeCurrentcheck[timeCurrentcheck.length - 13]
       );
     }
-    dateCheck = dateCheck + 8;
+    dateCheck = dateCheck + timeZone;
     if (dateCheck > 19) {
       columns = columns + 1;
     }
@@ -212,6 +213,7 @@ async function gsrun(cl) {
     };
     let dateListButton;
     let blackList = [];
+    let timerId;
     //Удаление записи клиента админом ----------------
     removeChoiceAdmin.enter(async (chose) => {
       metaData = await gsapi.spreadsheets.get({
@@ -239,7 +241,7 @@ async function gsrun(cl) {
       });
 
       let numberRecords = dataBase.data.valueRanges[1].values.length;
-      let timeArray = dataBase.data.valueRanges[1].values.flat();
+      //let timeArray = dataBase.data.valueRanges[1].values.flat();
       let dateSheets = dataBase.data.valueRanges[2].values.flat();
       let dateArr = dataBase.data.valueRanges[3].values.flat();
       let adminMessage = dataBase.data.valueRanges[0].values.flat();
@@ -279,7 +281,7 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          dateCheck = dateCheck + timeZone;
           if (dateCheck > 19) {
             columns = columns + 1;
           }
@@ -330,19 +332,24 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          timeCheck = timeCheck + 8;
+          timeCheck = timeCheck + timeZone;
           if (timeCheck >= 19) {
             timeCheck = 8;
           }
+          let timeMasterArray = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: [`${indexMaster}!A4:A`],
+          });
+          timeMaster = timeMasterArray.data.values.flat();
 
           let time = "";
           let row = 0;
-          for (i = 0; i < timeSheets.length; i++) {
-            if (timeSheets[i][0] === "1") {
-              time = timeSheets[i][0] + timeSheets[i][1];
+          for (i = 0; i < timeMaster.length; i++) {
+            if (timeMaster[i][0] === "1") {
+              time = timeMaster[i][0] + timeMaster[i][1];
               row = row + 1;
             } else {
-              time = timeSheets[i][0];
+              time = timeMaster[i][0];
               row = row + 1;
             }
 
@@ -370,10 +377,10 @@ async function gsrun(cl) {
 
           //Определяем занятое время
           let timeArr = [];
-          for (i = row + 2; i < numberRecords; i++) {
+          for (i = row; i < numberRecords; i++) {
             if (timeColumn.data.values[i] == "") {
             } else {
-              let itemss = timeArray[i];
+              let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
@@ -391,6 +398,11 @@ async function gsrun(cl) {
           );
         } else if (dateList.includes(checkMessage)) {
           indexDate = chose.update.message.text;
+          let timeMasterArray = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: [`${indexMaster}!A4:A`],
+          });
+          timeMaster = timeMasterArray.data.values.flat();
           let column = 1;
           for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
@@ -401,7 +413,7 @@ async function gsrun(cl) {
 
           // Определили колонку с выбранной датой
           indexColumn = column;
-          console.log(column);
+          // console.log(column);
           let timeColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
             range: `${indexMaster}!R4C${column}:R${
@@ -413,7 +425,7 @@ async function gsrun(cl) {
           for (i = 0; i < numberRecords; i++) {
             if (timeColumn.data.values[i] == "") {
             } else {
-              let itemss = timeArray[i];
+              let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
@@ -467,12 +479,12 @@ async function gsrun(cl) {
               "\nНа какое время была сделана запись?",
             Markup.keyboard(items).oneTime().resize()
           );
-        } else if (timeArray.includes(checkMessage)) {
+        } else if (timeMaster.includes(checkMessage)) {
           indexTime = chose.update.message.text;
           //Определяем строку записи по выбранному времени из всего массива времени
           let rowTime = 4;
-          for (i = 0; i < timeArray.length; i++) {
-            if (indexTime == timeArray[i]) {
+          for (i = 0; i < timeMaster.length; i++) {
+            if (indexTime == timeMaster[i]) {
               rowTime = rowTime + i;
               indexRow = rowTime;
               break;
@@ -738,7 +750,7 @@ async function gsrun(cl) {
             timeCurrentcheck[timeCurrentcheck.length - 13]
         );
       }
-      dateCheck = dateCheck + 8;
+      dateCheck = dateCheck + timeZone;
       if (dateCheck > 19) {
         columns = columns + 1;
       }
@@ -805,7 +817,7 @@ async function gsrun(cl) {
         // Проверяем на черный список
         let serviceList = dataBase.data.valueRanges[0].values.flat();
         let numberRecords = dataBase.data.valueRanges[1].values.length;
-        let timeArray = dataBase.data.valueRanges[1].values.flat();
+        //  let timeArray = dataBase.data.valueRanges[1].values.flat();
         let dateSheets = dataBase.data.valueRanges[2].values.flat();
         let dateArr = dataBase.data.valueRanges[3].values.flat();
         let priceList = dataBase.data.valueRanges[4].values.flat();
@@ -894,7 +906,7 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          dateCheck = dateCheck + timeZone;
           if (dateCheck > 19) {
             columns = columns + 1;
           }
@@ -945,7 +957,7 @@ async function gsrun(cl) {
                 timeCurrent[timeCurrent.length - 13]
             );
           }
-          timeCheck = timeCheck + 8;
+          timeCheck = timeCheck + timeZone;
           if (timeCheck >= 19) {
             timeCheck = 8;
           }
@@ -955,17 +967,17 @@ async function gsrun(cl) {
           });
           dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
           numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-          timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
+          timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
 
           let time = "";
           let row = 0;
-          for (i = 0; i < timeArray.length; i++) {
-            if (timeArray[i][0] === "1") {
-              time = timeArray[i][0] + timeArray[i][1];
+          for (i = 0; i < timeMaster.length; i++) {
+            if (timeMaster[i][0] === "1") {
+              time = timeMaster[i][0] + timeMaster[i][1];
               //  console.log(Number(time));
               row = row + 1;
             } else {
-              time = timeArray[i][0];
+              time = timeMaster[i][0];
               //  console.log(Number(time));
               row = row + 1;
             }
@@ -995,13 +1007,13 @@ async function gsrun(cl) {
 
           //Определяем свободное время
           let timeArr = [];
-          for (i = row + 2; i < numberRecords + 4; i++) {
+          for (i = row + 1; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
-              let itemss = timeArray[i];
+              let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
-
+          // console.log(timeArr);
           //Добавлем к массиву времени возврат к дате
           let items = timeArr;
           let itemsDop = ["Выбрать другую дату"];
@@ -1089,34 +1101,116 @@ async function gsrun(cl) {
               numberRecords + 4
             }C${column}`,
           });
-
-          //Определяем свободное время
-          let timeArr = [];
-          for (i = 0; i < numberRecords + 4; i++) {
-            if (timeColumn.data.values[i] == "") {
-              let itemss = timeArray[i];
-              timeArr = timeArr.concat(itemss);
+          if (indexDate === currentDay) {
+            let timeCurrent = moment().format();
+            console.log(moment().format());
+            let timeCheck = timeCurrent[timeCurrent.length - 14];
+            if (timeCheck === "0") {
+              timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
+            } else {
+              timeCheck = Number(
+                timeCurrent[timeCurrent.length - 14] +
+                  timeCurrent[timeCurrent.length - 13]
+              );
             }
+            timeCheck = timeCheck + timeZone;
+            if (timeCheck >= 19) {
+              timeCheck = 8;
+            }
+            let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
+              spreadsheetId: idSheets,
+              ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
+            });
+            dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+            numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+            timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
+
+            let time = "";
+            let row = 0;
+            for (i = 0; i < timeMaster.length; i++) {
+              if (timeMaster[i][0] === "1") {
+                time = timeMaster[i][0] + timeMaster[i][1];
+                //  console.log(Number(time));
+                row = row + 1;
+              } else {
+                time = timeMaster[i][0];
+                //  console.log(Number(time));
+                row = row + 1;
+              }
+
+              if (Number(time) === Number(timeCheck)) {
+                console.log(row);
+                break;
+              }
+            }
+            // Определим колонку с текущей датой
+            let column = 1;
+            for (let i = 0; i < dateSheets.length; i++) {
+              if (indexDate === dateSheets[i]) {
+                column = column + i;
+                break;
+              }
+            }
+
+            indexColumn = column;
+            //console.log(column);
+            let timeColumn = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${indexMaster}!R4C${column}:R${
+                numberRecords + 4
+              }C${column}`,
+            });
+
+            //Определяем свободное время
+            let timeArr = [];
+            for (i = row + 1; i < numberRecords + 4; i++) {
+              if (timeColumn.data.values[i] == "") {
+                let itemss = timeMaster[i];
+                timeArr = timeArr.concat(itemss);
+              }
+            }
+            // console.log(timeArr);
+            //Добавлем к массиву времени возврат к дате
+            let items = timeArr;
+            let itemsDop = ["Выбрать другую дату"];
+            Array.prototype.push.apply(items, itemsDop);
+            //let dateList = dataColumn.data.values.flat();
+            chose.telegram.sendMessage(
+              chose.chat.id,
+              "Вы выбрали дату: " +
+                `${indexDate}` +
+                ". \n🕰Выберите другое свободное время.",
+              Markup.keyboard(items).oneTime().resize()
+            );
+          } else {
+            //Определяем свободное время
+            let timeArr = [];
+            for (i = 0; i < numberRecords + 4; i++) {
+              if (timeColumn.data.values[i] == "") {
+                let itemss = timeMaster[i];
+                timeArr = timeArr.concat(itemss);
+              }
+            }
+            //Добавлем к массиву времени возврат к дате
+            let items = timeArr;
+            let itemsDop = ["Выбрать другую дату"];
+            Array.prototype.push.apply(items, itemsDop);
+            //let dateList = dataColumn.data.values.flat();
+            chose.telegram.sendMessage(
+              chose.chat.id,
+              "Вы выбрали дату: " +
+                `${indexDate}` +
+                ". \n🕰Выберите другое свободное время.",
+              Markup.keyboard(items).oneTime().resize()
+            );
           }
-          //Добавлем к массиву времени возврат к дате
-          let items = timeArr;
-          let itemsDop = ["Выбрать другую дату"];
-          Array.prototype.push.apply(items, itemsDop);
-          //let dateList = dataColumn.data.values.flat();
-          chose.telegram.sendMessage(
-            chose.chat.id,
-            "Вы выбрали дату: " +
-              `${indexDate}` +
-              ". \n🕰Выберите другое свободное время.",
-            Markup.keyboard(items).oneTime().resize()
-          );
           //});
-        } else if (timeArray.includes(checkMessage)) {
+        } else if (timeMaster.includes(checkMessage)) {
           indexTime = chose.update.message.text;
 
           let rowTime = 4;
-          for (i = 0; i < timeArray.length; i++) {
-            if (indexTime == timeArray[i]) {
+          for (i = 0; i < timeMaster.length; i++) {
+            if (indexTime == timeMaster[i]) {
               rowTime = rowTime + i;
               indexRow = rowTime;
               break;
@@ -1184,7 +1278,7 @@ async function gsrun(cl) {
               resource: { values: dateRecord },
             };
             await gsapi.spreadsheets.values.update(updateOptions);
-
+            clearTimeout(timerId);
             chose.telegram.sendMessage(
               chose.chat.id,
               "Отлично. Вы записаны 💁‍♂️:\nМастер: " +
@@ -1282,7 +1376,6 @@ async function gsrun(cl) {
             console.log(indexTime);
             //Настройка оповещения клиента за час
             let mmsHours = 3600000;
-            let timeZone = 8;
             let dateRec = indexDate[indexDate.length - 5];
             if (dateRec === "0") {
               dateRec = indexDate[indexDate.length - 4];
@@ -1327,10 +1420,12 @@ async function gsrun(cl) {
               hoursRec,
               minutesRec
             );
-            let intervalTime = dateRecordsMM - currentDate - mmsHours * 9;
+            let intervalTime =
+              dateRecordsMM - currentDate - mmsHours * (timeZone + 1);
             console.log(intervalTime / mmsHours);
             if (intervalTime > 0) {
-              setTimeout(async () => {
+              clearTimeout(timerId);
+              async function Setinterval() {
                 let clientBaseIdAr = await gsapi.spreadsheets.values.get({
                   spreadsheetId: idSheets,
                   range: `${listSetting[0]}!A1:A`,
@@ -1351,36 +1446,25 @@ async function gsrun(cl) {
                       clientLastRecords.data.values.flat()[1];
                     let indexTimeCheck =
                       clientLastRecords.data.values.flat()[2];
-                    console.log(indexTime);
-                    console.log(indexDateCheck);
-                    if (
-                      indexDate === indexDateCheck &&
-                      indexTime === indexTimeCheck
-                    ) {
-                      chose.telegram.sendMessage(
-                        chose.chat.id,
-                        "Приветсвуем вас " +
-                          `${nameClient}` +
-                          ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
-                          `${indexMaster}` +
-                          "\nУслуга: " +
-                          `${indexService}` +
-                          "\nДата записи: " +
-                          `${indexDateCheck}` +
-                          "\nВремя записи: " +
-                          `${indexTimeCheck}`,
-                        Markup.keyboard(deleteRecord).oneTime().resize()
-                      );
-                      //  chose.reply("Оповещение не отправлено")
-
-                      // break
-                    } else {
-                      return chose.scene.leave();
-                    }
+                    chose.telegram.sendMessage(
+                      chose.chat.id,
+                      "Приветсвуем вас " +
+                        `${nameClient}` +
+                        ". Напоминаем вам, что Вы записаны на сегодня:\nМастер: " +
+                        `${indexMaster}` +
+                        "\nУслуга: " +
+                        `${indexService}` +
+                        "\nДата записи: " +
+                        `${indexDateCheck}` +
+                        "\nВремя записи: " +
+                        `${indexTimeCheck}`,
+                      Markup.keyboard(deleteRecord).oneTime().resize()
+                    );
                     break;
                   }
                 }
-              }, intervalTime);
+              }
+              timerId = setTimeout(Setinterval, intervalTime);
             }
             return chose.scene.leave();
           } else {
@@ -1493,7 +1577,7 @@ async function gsrun(cl) {
               timeCurrentcheck[timeCurrentcheck.length - 13]
           );
         }
-        dateCheck = dateCheck + 8;
+        dateCheck = dateCheck + timeZone;
         if (dateCheck > 19) {
           columns = columns + 1;
         }
@@ -1550,7 +1634,7 @@ async function gsrun(cl) {
               timeCurrent[timeCurrent.length - 13]
           );
         }
-        timeCheck = timeCheck + 8;
+        timeCheck = timeCheck + timeZone;
         if (timeCheck >= 19) {
           timeCheck = 8;
         }
@@ -1560,17 +1644,17 @@ async function gsrun(cl) {
         });
         dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
         numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
+        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
 
         let time = "";
         let row = 0;
-        for (i = 0; i < timeArray.length; i++) {
-          if (timeArray[i][0] === "1") {
-            time = timeArray[i][0] + timeArray[i][1];
+        for (i = 0; i < timeMaster.length; i++) {
+          if (timeMaster[i][0] === "1") {
+            time = timeMaster[i][0] + timeMaster[i][1];
             //  console.log(Number(time));
             row = row + 1;
           } else {
-            time = timeArray[i][0];
+            time = timeMaster[i][0];
             //  console.log(Number(time));
             row = row + 1;
           }
@@ -1598,9 +1682,9 @@ async function gsrun(cl) {
 
         //Определяем свободное время
         let timeArr = [];
-        for (i = row + 2; i < numberRecords + 4; i++) {
+        for (i = row + 1; i < numberRecords + 4; i++) {
           if (timeColumn.data.values[i] == "") {
-            let itemss = timeArray[i];
+            let itemss = timeMaster[i];
             timeArr = timeArr.concat(itemss);
           }
         }
@@ -1619,24 +1703,14 @@ async function gsrun(cl) {
         //});
       } else if (dateList.includes(checkMessage)) {
         indexDate = chose.update.message.text;
-        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!A4:A`,
-        //  });
-        //  numberRecords = numberRecordsArr.data.values.length;
-        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!3:3`,
-        //  });
-        //  dateSheets = dateSheetsArr.data.values.flat();
-        //  timeArray = numberRecordsArr.data.values.flat();
+
         let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
           ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
         });
         dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
         numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
+        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
         let column = 1;
         for (let i = 0; i < dateArr.length; i++) {
           if (indexDate === dateSheets[i]) {
@@ -1652,12 +1726,29 @@ async function gsrun(cl) {
           spreadsheetId: idSheets,
           range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
         });
+        let time = "";
+        let row = 0;
+        for (i = 0; i < timeMaster.length; i++) {
+          if (timeMaster[i][0] === "1") {
+            time = timeMaster[i][0] + timeMaster[i][1];
+            //  console.log(Number(time));
+            row = row + 1;
+          } else {
+            time = timeMaster[i][0];
+            //  console.log(Number(time));
+            row = row + 1;
+          }
+          // if (Number(time) === Number(timeCheck)) {
+          //   console.log(row);
+          //   break;
+          // }
+        }
 
         //Определяем свободное время
         let timeArr = [];
         for (i = 0; i < numberRecords + 4; i++) {
           if (timeColumn.data.values[i] == "") {
-            let itemss = timeArray[i];
+            let itemss = timeMaster[i];
             timeArr = timeArr.concat(itemss);
           }
         }
@@ -1665,7 +1756,6 @@ async function gsrun(cl) {
         let items = timeArr;
         let itemsDop = ["Выбрать другую дату"];
         Array.prototype.push.apply(items, itemsDop);
-        //let dateList = dataColumn.data.values.flat();
         chose.telegram.sendMessage(
           chose.chat.id,
           "Клиент выбрал дату: " +
@@ -1675,67 +1765,119 @@ async function gsrun(cl) {
         );
         //});
       } else if (anotherTime.includes(checkMessage)) {
-        //  let numberRecordsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!A4:A`,
-        //  });
-        //  numberRecords = numberRecordsArr.data.values.length;
-        //  let dateSheetsArr = await gsapi.spreadsheets.values.get({
-        //    spreadsheetId: idSheets,
-        //    range: `${listSheet[0]}!3:3`,
-        //  });
-        //  dateSheets = dateSheetsArr.data.values.flat();
-        //  timeArray = numberRecordsArr.data.values.flat();
         let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
           spreadsheetId: idSheets,
           ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
         });
         dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
         numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
-        let column = 1;
-        for (let i = 0; i < dateSheets.length; i++) {
-          if (indexDate === dateSheets[i]) {
-            column = column + i;
-            break;
-          }
-        }
-        // Определили колонку с выбранной датой
-        //console.log(column);
-        indexColumn = column;
+        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
 
-        let timeColumn = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
-        });
-
-        //Определяем свободное время
-        let timeArr = [];
-        for (i = 0; i < numberRecords + 4; i++) {
-          if (timeColumn.data.values[i] == "") {
-            let itemss = timeArray[i];
-            timeArr = timeArr.concat(itemss);
+        if (indexDate === currentDay) {
+          let timeCurrent = moment().format();
+          console.log(moment().format());
+          let timeCheck = timeCurrent[timeCurrent.length - 14];
+          if (timeCheck === "0") {
+            timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
+          } else {
+            timeCheck = Number(
+              timeCurrent[timeCurrent.length - 14] +
+                timeCurrent[timeCurrent.length - 13]
+            );
           }
+          timeCheck = timeCheck + timeZone;
+          if (timeCheck >= 19) {
+            timeCheck = 8;
+          }
+
+          let time = "";
+          let row = 0;
+          for (i = 0; i < timeMaster.length; i++) {
+            if (timeMaster[i][0] === "1") {
+              time = timeMaster[i][0] + timeMaster[i][1];
+              //  console.log(Number(time));
+              row = row + 1;
+            } else {
+              time = timeMaster[i][0];
+              //  console.log(Number(time));
+              row = row + 1;
+            }
+
+            if (Number(time) === Number(timeCheck)) {
+              console.log(row);
+              break;
+            }
+          }
+          // Определим колонку с текущей датой
+          let column = 1;
+          for (let i = 0; i < dateSheets.length; i++) {
+            if (indexDate === dateSheets[i]) {
+              column = column + i;
+              break;
+            }
+          }
+
+          indexColumn = column;
+          //console.log(column);
+          let timeColumn = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!R4C${column}:R${
+              numberRecords + 4
+            }C${column}`,
+          });
+
+          //Определяем свободное время
+          let timeArr = [];
+          for (i = row + 1; i < numberRecords + 4; i++) {
+            if (timeColumn.data.values[i] == "") {
+              let itemss = timeMaster[i];
+              timeArr = timeArr.concat(itemss);
+            }
+          }
+          // console.log(timeArr);
+          //Добавлем к массиву времени возврат к дате
+          let items = timeArr;
+          let itemsDop = ["Выбрать другую дату"];
+          Array.prototype.push.apply(items, itemsDop);
+          //let dateList = dataColumn.data.values.flat();
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Клиент выбрал дату: " +
+              `${indexDate}` +
+              ". \nНайдите для него другое свободное время.",
+            Markup.keyboard(items).oneTime().resize()
+          );
+        } else {
+          //Определяем свободное время
+          let timeArr = [];
+          for (i = 0; i < numberRecords + 4; i++) {
+            if (timeColumn.data.values[i] == "") {
+              let itemss = timeMaster[i];
+              timeArr = timeArr.concat(itemss);
+            }
+          }
+          //Добавлем к массиву времени возврат к дате
+          let items = timeArr;
+          let itemsDop = ["Выбрать другую дату"];
+          Array.prototype.push.apply(items, itemsDop);
+          //let dateList = dataColumn.data.values.flat();
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Клиент выбрал дату: " +
+              `${indexDate}` +
+              ". \nНайдите для него другое свободное время.",
+            Markup.keyboard(items).oneTime().resize()
+          );
         }
         //Добавлем к массиву времени возврат к дате
-        let items = timeArr;
-        let itemsDop = ["Выбрать другую дату"];
-        Array.prototype.push.apply(items, itemsDop);
-        //let dateList = dataColumn.data.values.flat();
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Клиент выбрал дату: " +
-            `${indexDate}` +
-            ". \nНайдите для него другое свободное время.",
-          Markup.keyboard(items).oneTime().resize()
-        );
+
         //});
-      } else if (timeArray.includes(checkMessage)) {
+      } else if (timeMaster.includes(checkMessage)) {
         indexTime = chose.update.message.text;
 
         let rowTime = 4;
-        for (i = 0; i < timeArray.length; i++) {
-          if (indexTime == timeArray[i]) {
+        for (i = 0; i < timeMaster.length; i++) {
+          if (indexTime == timeMaster[i]) {
             rowTime = rowTime + i;
             indexRow = rowTime;
             break;
@@ -1896,6 +2038,7 @@ async function gsrun(cl) {
           range: `${listSetting[0]}!A1:A`,
         });
         let clientBaseId = clientBaseIdAr.data.values.flat();
+        clearTimeout(timerId);
         for (let n = 0; n < clientBaseId.length; n++) {
           if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
             let clientLastRecords = await gsapi.spreadsheets.values.get({
@@ -2065,7 +2208,7 @@ async function gsrun(cl) {
                 timeCurrentcheck[timeCurrentcheck.length - 13]
             );
           }
-          dateCheck = dateCheck + 8;
+          dateCheck = dateCheck + timeZone;
           if (dateCheck > 19) {
             columns = columns + 1;
           }
