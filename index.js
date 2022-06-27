@@ -1279,6 +1279,7 @@ async function gsrun(cl) {
                 break;
               }
             }
+            console.log(indexTime);
             //Настройка оповещения клиента за час
             let mmsHours = 3600000;
             let timeZone = 8;
@@ -1350,14 +1351,12 @@ async function gsrun(cl) {
                       clientLastRecords.data.values.flat()[1];
                     let indexTimeCheck =
                       clientLastRecords.data.values.flat()[2];
+                    console.log(indexTime);
+                    console.log(indexDateCheck);
                     if (
-                      indexTime !== indexTimeCheck &&
-                      indexDate !== indexDateCheck
+                      indexTime == indexTimeCheck &&
+                      indexDate == indexDateCheck
                     ) {
-                      //  chose.reply("Оповещение не отправлено")
-                      return chose.scene.leave();
-                      // break
-                    } else {
                       chose.telegram.sendMessage(
                         chose.chat.id,
                         "Приветсвуем вас " +
@@ -1372,6 +1371,11 @@ async function gsrun(cl) {
                           `${indexTimeCheck}`,
                         Markup.keyboard(deleteRecord).oneTime().resize()
                       );
+                      //  chose.reply("Оповещение не отправлено")
+
+                      // break
+                    } else {
+                      return chose.scene.leave();
                     }
                     break;
                   }
