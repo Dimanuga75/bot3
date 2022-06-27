@@ -1346,9 +1346,14 @@ async function gsrun(cl) {
                     let nameClient = clientLastRecords.data.values.flat()[0];
                     let indexMaster = clientLastRecords.data.values.flat()[3];
                     let indexService = clientLastRecords.data.values.flat()[4];
-                    let indexDate = clientLastRecords.data.values.flat()[1];
-                    let indexTime = clientLastRecords.data.values.flat()[2];
-                    if (nameClient == "") {
+                    let indexDateCheck =
+                      clientLastRecords.data.values.flat()[1];
+                    let indexTimeCheck =
+                      clientLastRecords.data.values.flat()[2];
+                    if (
+                      indexTime !== indexTimeCheck &&
+                      indexDate !== indexDateCheck
+                    ) {
                       //  chose.reply("Оповещение не отправлено")
                       return chose.scene.leave();
                       // break
@@ -1362,9 +1367,9 @@ async function gsrun(cl) {
                           "\nУслуга: " +
                           `${indexService}` +
                           "\nДата записи: " +
-                          `${indexDate}` +
+                          `${indexDateCheck}` +
                           "\nВремя записи: " +
-                          `${indexTime}`,
+                          `${indexTimeCheck}`,
                         Markup.keyboard(deleteRecord).oneTime().resize()
                       );
                     }
