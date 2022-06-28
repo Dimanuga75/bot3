@@ -168,7 +168,7 @@ async function gsrun(cl) {
       );
     }
     dateCheck = dateCheck + timeZone;
-    if (dateCheck > 19) {
+    if (dateCheck >= 19) {
       columns = columns + 1;
     }
     // ------------------------------------
@@ -282,7 +282,7 @@ async function gsrun(cl) {
             );
           }
           dateCheck = dateCheck + timeZone;
-          if (dateCheck > 19) {
+          if (dateCheck >= 19) {
             columns = columns + 1;
           }
           let dateAfterCurrentDate = dateArr.length - columns;
@@ -352,8 +352,10 @@ async function gsrun(cl) {
               time = timeMaster[i][0];
               row = row + 1;
             }
-
-            if (Number(time) === Number(timeCheck)) {
+            if (Number(time) <= 7) {
+              row = -1;
+              break;
+            } else if (Number(time) === Number(timeCheck)) {
               break;
             }
           }
@@ -751,7 +753,7 @@ async function gsrun(cl) {
         );
       }
       dateCheck = dateCheck + timeZone;
-      if (dateCheck > 19) {
+      if (dateCheck >= 19) {
         columns = columns + 1;
       }
       //Получаем значение текущей даты
@@ -907,7 +909,7 @@ async function gsrun(cl) {
             );
           }
           dateCheck = dateCheck + timeZone;
-          if (dateCheck > 19) {
+          if (dateCheck >= 19) {
             columns = columns + 1;
           }
 
@@ -981,8 +983,10 @@ async function gsrun(cl) {
               //  console.log(Number(time));
               row = row + 1;
             }
-
-            if (Number(time) === Number(timeCheck)) {
+            if (Number(time) <= 7) {
+              row = -1;
+              break;
+            } else if (Number(time) === Number(timeCheck)) {
               console.log(row);
               break;
             }
@@ -1137,8 +1141,10 @@ async function gsrun(cl) {
                 //  console.log(Number(time));
                 row = row + 1;
               }
-
-              if (Number(time) === Number(timeCheck)) {
+              if (Number(time) <= 7) {
+                row = -1;
+                break;
+              } else if (Number(time) === Number(timeCheck)) {
                 console.log(row);
                 break;
               }
@@ -1373,7 +1379,7 @@ async function gsrun(cl) {
                 break;
               }
             }
-            console.log(indexTime);
+            //console.log(indexTime);
             //Настройка оповещения клиента за час
             let mmsHours = 3600000;
             let dateRec = indexDate[indexDate.length - 5];
@@ -1439,6 +1445,9 @@ async function gsrun(cl) {
                         range: `${listSetting[0]}!H${n + 1}:N${n + 1}`,
                       }
                     );
+                    if (clientLastRecords.data.values === undefined) {
+                      return chose.scene.leave();
+                    }
                     let nameClient = clientLastRecords.data.values.flat()[0];
                     let indexMaster = clientLastRecords.data.values.flat()[3];
                     let indexService = clientLastRecords.data.values.flat()[4];
@@ -1578,7 +1587,7 @@ async function gsrun(cl) {
           );
         }
         dateCheck = dateCheck + timeZone;
-        if (dateCheck > 19) {
+        if (dateCheck >= 19) {
           columns = columns + 1;
         }
         //---------------------------
@@ -1658,8 +1667,10 @@ async function gsrun(cl) {
             //  console.log(Number(time));
             row = row + 1;
           }
-
-          if (Number(time) === Number(timeCheck)) {
+          if (Number(time) <= 7) {
+            row = -1;
+            break;
+          } else if (Number(time) === Number(timeCheck)) {
             //  console.log(row);
             break;
           }
@@ -1802,8 +1813,10 @@ async function gsrun(cl) {
               //  console.log(Number(time));
               row = row + 1;
             }
-
-            if (Number(time) === Number(timeCheck)) {
+            if (Number(time) <= 7) {
+              row = -1;
+              break;
+            } else if (Number(time) === Number(timeCheck)) {
               console.log(row);
               break;
             }
@@ -2038,13 +2051,22 @@ async function gsrun(cl) {
           range: `${listSetting[0]}!A1:A`,
         });
         let clientBaseId = clientBaseIdAr.data.values.flat();
-        clearTimeout(timerId);
+        //  clearTimeout(timerId);
         for (let n = 0; n < clientBaseId.length; n++) {
           if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
             let clientLastRecords = await gsapi.spreadsheets.values.get({
               spreadsheetId: idSheets,
               range: `${listSetting[0]}!H${n + 1}:N${n + 1}`,
             });
+            if (clientLastRecords.data.values === undefined) {
+              chose.telegram.sendMessage(
+                chose.chat.id,
+                'У вас нет текущих записей для удаления. Вы можете сделать новую запись. Для этого нажмите на кнопку "Новая запись" или напишите слово "запись" (пишем без кавычек).',
+                Markup.keyboard(recordNewButton).oneTime().resize()
+              );
+              return chose.scene.leave();
+            }
+
             let nameClient = clientLastRecords.data.values.flat()[0];
             let indexMaster = clientLastRecords.data.values.flat()[3];
             let indexService = clientLastRecords.data.values.flat()[4];
