@@ -67,7 +67,7 @@ bot.hears("Выбрать еще мастера", Stage.enter("work"));
 //bot.on("sticker", (ctx) => ctx.reply("👍"));
 //bot.hears("hi", (ctx) => ctx.reply("Heloooooo"));
 bot.launch();
-let timeZone = 8;
+let timeZone = 0;
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -787,7 +787,7 @@ async function gsrun(cl) {
       }
 
       recordClient.on("message", async (chose) => {
-        checkMessage = chose.message.text;
+        checkMessage = chose.message.text.toString();
         //  console.log(checkMessage);
         //  console.log(currentDay[0]);
         let metaData = await gsapi.spreadsheets.get({
@@ -1048,7 +1048,7 @@ async function gsrun(cl) {
           dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
           numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
           timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
-
+          // console.log(timeMaster);
           let column = 1;
           for (let i = 0; i < dateSheets.length; i++) {
             if (indexDate === dateSheets[i]) {
@@ -1067,15 +1067,29 @@ async function gsrun(cl) {
               numberRecords + 4
             }C${column}`,
           });
-
+          // let time = "";
+          // let row = 0;
+          // for (i = 0; i < timeMaster.length; i++) {
+          //   if (timeMaster[i][0] === "1") {
+          //     time = timeMaster[i][0] + timeMaster[i][1];
+          //     //  console.log(Number(time));
+          //     row = row + 1;
+          //   } else {
+          //     time = timeMaster[i][0];
+          //     //  console.log(Number(time));
+          //     row = row + 1;
+          //   }
+          // }
+          // console.log(row);
           //Определяем свободное время
           let timeArr = [];
-          for (i = row + 1; i < numberRecords + 4; i++) {
+          for (i = 0; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
               let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
+          // console.log(timeArr);
           //Добавлем к массиву времени возврат к дате
           let items = timeArr;
           let itemsDop = ["Выбрать другую дату"];
