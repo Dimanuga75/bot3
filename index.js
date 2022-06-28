@@ -67,7 +67,7 @@ bot.hears("Выбрать еще мастера", Stage.enter("work"));
 //bot.on("sticker", (ctx) => ctx.reply("👍"));
 //bot.hears("hi", (ctx) => ctx.reply("Heloooooo"));
 bot.launch();
-
+let timeZone = 8;
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -95,7 +95,7 @@ client.authorize(function (err, tokens) {
   }
 });
 let timeCurrent1 = moment().format();
-let timeZone = 8;
+
 console.log(timeCurrent1);
 async function gsrun(cl) {
   try {
@@ -1047,7 +1047,7 @@ async function gsrun(cl) {
           });
           dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
           numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-          timeArray = dataBaseSheet.data.valueRanges[0].values.flat();
+          timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
 
           let column = 1;
           for (let i = 0; i < dateSheets.length; i++) {
@@ -1070,9 +1070,9 @@ async function gsrun(cl) {
 
           //Определяем свободное время
           let timeArr = [];
-          for (i = 0; i < numberRecords + 4; i++) {
+          for (i = row + 1; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
-              let itemss = timeArray[i];
+              let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
