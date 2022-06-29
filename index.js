@@ -293,7 +293,7 @@ async function gsrun(cl) {
           //Получаем значение текущей даты
           let dataColumn = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
-            range: `${listSheet[0]}!R3C${columns}:R3C${
+            range: `${indexMaster}!R3C${columns}:R3C${
               columns + dateAfterCurrentDate
             }`,
           });
@@ -1261,28 +1261,38 @@ async function gsrun(cl) {
           );
         } else if (confirmEntry.includes(checkMessage)) {
           // Проверка свободно время или нет
-          let checkFreeArr = await gsapi.spreadsheets.values.get({
+          // let ddd = await gsapi.spreadsheets.values.get({
+          //   spreadsheetId: idSheets,
+          //   range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
+          // });
+          let recordClientArr = await gsapi.spreadsheets.values.batchGet({
             spreadsheetId: idSheets,
-            range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
+            ranges: [
+              `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
+              `${listSetting[0]}!A2:A`,
+              `${listSetting[0]}!E1:E`,
+              `${listSetting[0]}!G1:G`,
+              `${listSetting[0]}!F1:F`,
+            ],
           });
-          let checkFree = checkFreeArr.data.values;
-          if (checkFree === undefined) {
-            // Запись в таблицу
-            let idListArr = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!A2:A`,
-            });
-            let idList = idListArr.data.values.flat();
-            let checkIdClient;
-            // let scoreId = 0;
-            for (i = 0; i < idList.length; i++) {
-              checkIdClient = idList[i];
-              if (checkIdClient == chose.chat.id) {
-                scoreId = i;
-                break;
-              }
-            }
 
+          let checkFree = recordClientArr.data.valueRanges[0].values;
+          let clientBaseId = recordClientArr.data.valueRanges[1].values.flat();
+          let adminMessage = recordClientArr.data.valueRanges[2].values.flat();
+          let masterName = recordClientArr.data.valueRanges[3].values.flat();
+          let masterIdArr = recordClientArr.data.valueRanges[4].values.flat();
+          if (checkFree === undefined) {
+            // Запись в таблицу (закоментирована считывание телефона)
+            //let idList = idListArr.data.values.flat();
+            //let checkIdClient;
+            // let scoreId = 0;
+            //for (i = 0; i < idList.length; i++) {
+            //  checkIdClient = idList[i];
+            //  if (checkIdClient == chose.chat.id) {
+            //    scoreId = i;
+            //    break;
+            //  }
+            //}
             //let indexPhoneArr = await gsapi.spreadsheets.values.get({
             //  spreadsheetId: idSheets,
             //  range: `${listSetting[0]}!R${scoreId + 2}C3:R${scoreId + 2}C3`,
@@ -1317,11 +1327,6 @@ async function gsrun(cl) {
               Markup.keyboard(deleteRecord).oneTime().resize()
             );
             //Оповещение администраторов
-            adminChatIdArr = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!E1:E`,
-            });
-            let adminMessage = adminChatIdArr.data.values.flat();
             for (let m = 1; m < adminMessage.length; m++) {
               chose.telegram.sendMessage(
                 adminMessage[m],
@@ -1342,18 +1347,9 @@ async function gsrun(cl) {
               );
             }
             //Оповещение мастера
-            let masterNameArr = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!G1:G`,
-            });
-            let masterName = masterNameArr.data.values.flat();
             for (let m = 1; m < masterName.length; m++) {
               if (`${masterName[m]}` == `${indexMaster}`) {
-                let masterIdArr = await gsapi.spreadsheets.values.get({
-                  spreadsheetId: idSheets,
-                  range: `${listSetting[0]}!F1:F`,
-                });
-                let masterId = masterIdArr.data.values.flat()[m];
+                let masterId = masterIdArr[m];
                 chose.telegram.sendMessage(
                   masterId,
                   "Появилась новая запись: " +
@@ -1370,11 +1366,6 @@ async function gsrun(cl) {
               }
             }
             //Рабочая запись (первый лист) в таблицу текущей записи клиента
-            let clientBaseIdAr = await gsapi.spreadsheets.values.get({
-              spreadsheetId: idSheets,
-              range: `${listSetting[0]}!A2:A`,
-            });
-            let clientBaseId = clientBaseIdAr.data.values.flat();
             for (let n = 0; n < clientBaseId.length; n++) {
               if (`${clientBaseId[n]}` == `${chose.chat.id}`) {
                 let dateRecordClientTable = {
@@ -2112,17 +2103,17 @@ async function gsrun(cl) {
               }
             }
             for (j = 0; j < dateRows.length; j++) {
-              if (indexDate == dateColumns[j]) {
+              if (indexTime == dateRows[j]) {
                 indexRow = indexRow + j;
                 break;
               }
             }
             //console.log(indexColumn);
             //console.log(indexRow);
-            let deleteValuesWork = { values: ["", "", "", "", "", "", ""] };
+            let deleteValuesWork = { values: ["", "", "", "", ""] };
             const updateOptions1 = {
               spreadsheetId: idSheets,
-              range: `${listSetting[0]}!R${n + 2}C8:R${n + 2}C14`,
+              range: `${listSetting[0]}!R${n + 2}C8:R${n + 2}C12`,
               valueInputOption: "USER_ENTERED",
               resource: { values: deleteValuesWork },
             };
