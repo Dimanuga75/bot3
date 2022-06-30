@@ -67,7 +67,7 @@ bot.hears("Выбрать еще мастера", Stage.enter("work"));
 //bot.on("sticker", (ctx) => ctx.reply("👍"));
 //bot.hears("hi", (ctx) => ctx.reply("Heloooooo"));
 bot.launch();
-let timeZone = 0;
+let timeZone = 8;
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -279,6 +279,7 @@ async function gsrun(cl) {
     let confirmEntry = ["Подтвердить запись ✅"];
     let anotherService = ["Выбрать другую услугу"];
     let anotherDate = ["Выбрать другую дату"];
+    let anotherDateMaster = ["Выбрать новую дату"];
     let anotherTime = ["Выбрать другое время ☝️"];
     let priceButton = ["Прайс лист"];
     let serviceChoice = ["Выбрать услугу", "Выбрать другую услугу"];
@@ -1607,6 +1608,7 @@ async function gsrun(cl) {
           }
         } catch (err) {
           chose.reply("Ошибка");
+          console.error("Ошибка");
         }
       });
     });
@@ -1616,292 +1618,139 @@ async function gsrun(cl) {
     bot.on("message", async (chose) => {
       let checkMessage = chose.message.text;
       let changeService = ["Заменить услугу"];
+      try {
+        if (clientRecord.includes(checkMessage)) {
+          metaData = await gsapi.spreadsheets.get({
+            spreadsheetId: idSheets,
+          });
+          // Формируем список первых двух рабочих листов
 
-      if (clientRecord.includes(checkMessage)) {
-        metaData = await gsapi.spreadsheets.get({
-          spreadsheetId: idSheets,
-        });
-        // Формируем список первых двух рабочих листов
-
-        let listSetting = new Array();
-        for (i = 0; i < 2; i++) {
-          listSetting.push(metaData.data.sheets[i].properties.title);
-        }
-
-        // Наши услуги
-        let serviceListArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${listSetting[1]}!A2:A`,
-        });
-        serviceList = serviceListArr.data.values.flat();
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "На какую услугу записать клиента",
-          Markup.keyboard(serviceList).oneTime().resize()
-        );
-      } else if (serviceList.includes(checkMessage)) {
-        listSheet = [];
-        sheets = metaData.data.sheets;
-        for (let i = 2; i < sheets.length; i++) {
-          listSheet.push(metaData.data.sheets[i].properties.title);
-        }
-
-        listSheetButton = listSheet.concat(changeService);
-        indexService = chose.update.message.text;
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "К какому мастеру записать клиента",
-          Markup.keyboard(listSheetButton).oneTime().resize()
-        );
-      } else if (changeService.includes(checkMessage)) {
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Выберите другую услугу для клиента",
-          Markup.keyboard(serviceList).oneTime().resize()
-        );
-      } else if (anotherMaster.includes(checkMessage)) {
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Выберите мастера для клиента:",
-          Markup.keyboard(listSheetButton).oneTime().resize()
-        );
-      } else if (listSheet.includes(checkMessage)) {
-        indexMaster = chose.update.message.text;
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Вы выбрали мастера: " +
-            `${indexMaster}` +
-            "\n" +
-            "Проверяю наличие свободных дат для записи"
-        );
-        // Определяем колонку с текущей датой из строки 2 с датами
-        dataSheets = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!2:2`,
-        });
-        dateArr = dataSheets.data.values.flat();
-        let columns = 1;
-        for (let i = 0; i < dateArr.length; i++) {
-          if (
-            new Date().getMonth() + 1 + "/" + new Date().getDate() ===
-            dateArr[i]
-          ) {
-            columns = columns + i;
-            break;
+          let listSetting = new Array();
+          for (i = 0; i < 2; i++) {
+            listSetting.push(metaData.data.sheets[i].properties.title);
           }
-        }
-        // ---------------------------
-        let timeCurrentcheck = moment().format();
-        let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
-        if (dateCheck === "0") {
-          dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
-        } else {
-          dateCheck = Number(
-            timeCurrentcheck[timeCurrentcheck.length - 14] +
-              timeCurrentcheck[timeCurrentcheck.length - 13]
-          );
-        }
-        dateCheck = dateCheck + timeZone;
-        if (dateCheck >= 19) {
-          columns = columns + 1;
-        }
-        //---------------------------
-        //Получаем значение текущей даты
-        // Ищем свободные даты
-        let dateFree = [];
-        let dataColumn1 = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R3C${columns}:R26C${dateArr.length}`,
-        });
-        let dateList = dataColumn1.data.values;
-        //  console.log(dateArr.length);
-        //  console.log(columns);
-        for (i = 0; i <= dateArr.length - columns; i++) {
-          //console.log(i);
-          for (b = 1; b < 24; b++) {
-            if (dateList[b][i] == "") {
-              dateFree = dateFree.concat(dateList[0][i]);
 
+          // Наши услуги
+          let serviceListArr = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${listSetting[1]}!A2:A`,
+          });
+          serviceList = serviceListArr.data.values.flat();
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "На какую услугу записать клиента",
+            Markup.keyboard(serviceList).oneTime().resize()
+          );
+        } else if (serviceList.includes(checkMessage)) {
+          listSheet = [];
+          sheets = metaData.data.sheets;
+          for (let i = 2; i < sheets.length; i++) {
+            listSheet.push(metaData.data.sheets[i].properties.title);
+          }
+
+          listSheetButton = listSheet.concat(changeService);
+          indexService = chose.update.message.text;
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "К какому мастеру записать клиента",
+            Markup.keyboard(listSheetButton).oneTime().resize()
+          );
+        } else if (changeService.includes(checkMessage)) {
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Выберите другую услугу для клиента",
+            Markup.keyboard(serviceList).oneTime().resize()
+          );
+        } else if (anotherMaster.includes(checkMessage)) {
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Выберите мастера для клиента:",
+            Markup.keyboard(listSheetButton).oneTime().resize()
+          );
+        } else if (listSheet.includes(checkMessage)) {
+          indexMaster = chose.update.message.text;
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Вы выбрали мастера: " +
+              `${indexMaster}` +
+              "\n" +
+              "Проверяю наличие свободных дат для записи"
+          );
+          // Определяем колонку с текущей датой из строки 2 с датами
+          dataSheets = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!2:2`,
+          });
+          dateArr = dataSheets.data.values.flat();
+          let columns = 1;
+          for (let i = 0; i < dateArr.length; i++) {
+            if (
+              new Date().getMonth() + 1 + "/" + new Date().getDate() ===
+              dateArr[i]
+            ) {
+              columns = columns + i;
               break;
             }
           }
-        }
-        //  dateList = dataColumn.data.values.flat();
-        dateListButton = anotherMaster.concat(dateFree);
-        currentDay = dateList[0][0];
-        //  console.log(currentDay);
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Свободные даты. Уточните, на какую дату записать клиента",
-          Markup.keyboard(dateListButton).oneTime().resize()
-        );
-      } else if (anotherDate.includes(checkMessage)) {
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Клиент выбрал мастера: " +
-            `${indexMaster}` +
-            "\n" +
-            "Подбирите для него другую подходящую дату",
-          Markup.keyboard(dateListButton).oneTime().resize()
-        );
-      } else if (checkMessage == currentDay) {
-        indexDate = chose.update.message.text;
+          // ---------------------------
+          let timeCurrentcheck = moment().format();
+          let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+          if (dateCheck === "0") {
+            dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
+          } else {
+            dateCheck = Number(
+              timeCurrentcheck[timeCurrentcheck.length - 14] +
+                timeCurrentcheck[timeCurrentcheck.length - 13]
+            );
+          }
+          dateCheck = dateCheck + timeZone;
+          if (dateCheck >= 19) {
+            columns = columns + 1;
+          }
+          //---------------------------
+          //Получаем значение текущей даты
+          // Ищем свободные даты
+          let dateFree = [];
+          let dataColumn1 = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!R3C${columns}:R26C${dateArr.length}`,
+          });
+          let dateList = dataColumn1.data.values;
+          //  console.log(dateArr.length);
+          //  console.log(columns);
+          for (i = 0; i <= dateArr.length - columns; i++) {
+            //console.log(i);
+            for (b = 1; b < 24; b++) {
+              if (dateList[b][i] == "") {
+                dateFree = dateFree.concat(dateList[0][i]);
 
-        let timeCurrent = moment().format();
-
-        let timeCheck = timeCurrent[timeCurrent.length - 14];
-        if (timeCheck === "0") {
-          timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
-        } else {
-          timeCheck = Number(
-            timeCurrent[timeCurrent.length - 14] +
-              timeCurrent[timeCurrent.length - 13]
+                break;
+              }
+            }
+          }
+          //  dateList = dataColumn.data.values.flat();
+          dateListButton = anotherMaster.concat(dateFree);
+          currentDay = dateList[0][0];
+          //  console.log(currentDay);
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Свободные даты. Уточните, на какую дату записать клиента",
+            Markup.keyboard(dateListButton).oneTime().resize()
           );
-        }
-        timeCheck = timeCheck + timeZone;
-        if (timeCheck >= 19) {
-          timeCheck = 8;
-        }
-        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
-          spreadsheetId: idSheets,
-          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
-        });
-        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
-        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
+        } else if (anotherDateMaster.includes(checkMessage)) {
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Клиент выбрал мастера: " +
+              `${indexMaster}` +
+              "\n" +
+              "Подбирите для него другую подходящую дату",
+            Markup.keyboard(dateListButton).oneTime().resize()
+          );
+        } else if (checkMessage == currentDay) {
+          indexDate = chose.update.message.text;
 
-        let time = "";
-        let row = 0;
-        for (i = 0; i < timeMaster.length; i++) {
-          if (timeMaster[i][0] === "1") {
-            time = timeMaster[i][0] + timeMaster[i][1];
-            //  console.log(Number(time));
-            row = row + 1;
-          } else {
-            time = timeMaster[i][0];
-            //  console.log(Number(time));
-            row = row + 1;
-          }
-          if (Number(timeCheck) <= 7) {
-            row = 0;
-            break;
-          } else if (Number(time) === Number(timeCheck)) {
-            //  console.log(row);
-            break;
-          }
-        }
-        // Определим колонку с текущей датой
-        let column = 1;
-        for (let i = 0; i < dateSheets.length; i++) {
-          if (indexDate === dateSheets[i]) {
-            column = column + i;
-            break;
-          }
-        }
-
-        indexColumn = column;
-        //console.log(column);
-        let timeColumn = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
-        });
-
-        //Определяем свободное время
-        let timeArr = [];
-        for (i = row; i < numberRecords + 4; i++) {
-          if (timeColumn.data.values[i] == "") {
-            let itemss = timeMaster[i];
-            timeArr = timeArr.concat(itemss);
-          }
-        }
-        //Добавлем к массиву времени возврат к дате
-        let items = timeArr;
-        let itemsDop = ["Выбрать другую дату"];
-        Array.prototype.push.apply(items, itemsDop);
-        //let dateList = dataColumn.data.values.flat();
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Клиент выбрал дату: " +
-            `${indexDate}` +
-            "\nУточните, на какое время его записать",
-          Markup.keyboard(items).oneTime().resize()
-        );
-        //});
-      } else if (dateList.includes(checkMessage)) {
-        indexDate = chose.update.message.text;
-
-        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
-          spreadsheetId: idSheets,
-          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
-        });
-        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
-        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
-        let column = 1;
-        for (let i = 0; i < dateArr.length; i++) {
-          if (indexDate === dateSheets[i]) {
-            column = column + i;
-            break;
-          }
-        }
-
-        // Определили колонку с выбранной датой
-        indexColumn = column;
-        //  console.log(column);
-        let timeColumn = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R4C${column}:R${numberRecords + 4}C${column}`,
-        });
-        let time = "";
-        let row = 0;
-        for (i = 0; i < timeMaster.length; i++) {
-          if (timeMaster[i][0] === "1") {
-            time = timeMaster[i][0] + timeMaster[i][1];
-            //  console.log(Number(time));
-            row = row + 1;
-          } else {
-            time = timeMaster[i][0];
-            //  console.log(Number(time));
-            row = row + 1;
-          }
-          // if (Number(time) === Number(timeCheck)) {
-          //   console.log(row);
-          //   break;
-          // }
-        }
-
-        //Определяем свободное время
-        let timeArr = [];
-        for (i = 0; i < numberRecords + 4; i++) {
-          if (timeColumn.data.values[i] == "") {
-            let itemss = timeMaster[i];
-            timeArr = timeArr.concat(itemss);
-          }
-        }
-        //Добавлем к массиву времени возврат к дате
-        let items = timeArr;
-        let itemsDop = ["Выбрать другую дату"];
-        Array.prototype.push.apply(items, itemsDop);
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Клиент выбрал дату: " +
-            `${indexDate}` +
-            ". \nУточните, на какое время его записать",
-          Markup.keyboard(items).oneTime().resize()
-        );
-        //});
-      } else if (anotherTime.includes(checkMessage)) {
-        let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
-          spreadsheetId: idSheets,
-          ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
-        });
-        dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
-        numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
-        timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
-
-        if (indexDate === currentDay) {
           let timeCurrent = moment().format();
-          console.log(moment().format());
+
           let timeCheck = timeCurrent[timeCurrent.length - 14];
           if (timeCheck === "0") {
             timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
@@ -1915,6 +1764,13 @@ async function gsrun(cl) {
           if (timeCheck >= 19) {
             timeCheck = 8;
           }
+          let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
+            spreadsheetId: idSheets,
+            ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
+          });
+          dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+          numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+          timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
 
           let time = "";
           let row = 0;
@@ -1956,26 +1812,70 @@ async function gsrun(cl) {
 
           //Определяем свободное время
           let timeArr = [];
-          for (i = row + 1; i < numberRecords + 4; i++) {
+          for (i = row; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
               let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
             }
           }
-          // console.log(timeArr);
           //Добавлем к массиву времени возврат к дате
           let items = timeArr;
-          let itemsDop = ["Выбрать другую дату"];
-          Array.prototype.push.apply(items, itemsDop);
+          // let itemsDop = ["Выбрать другую дату"];
+          Array.prototype.push.apply(items, anotherDateMaster);
           //let dateList = dataColumn.data.values.flat();
           chose.telegram.sendMessage(
             chose.chat.id,
             "Клиент выбрал дату: " +
               `${indexDate}` +
-              ". \nНайдите для него другое свободное время.",
+              "\nУточните, на какое время его записать",
             Markup.keyboard(items).oneTime().resize()
           );
-        } else {
+          //});
+        } else if (dateList.includes(checkMessage)) {
+          indexDate = chose.update.message.text;
+
+          let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
+            spreadsheetId: idSheets,
+            ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
+          });
+          dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+          numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+          timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
+          let column = 1;
+          for (let i = 0; i < dateArr.length; i++) {
+            if (indexDate === dateSheets[i]) {
+              column = column + i;
+              break;
+            }
+          }
+
+          // Определили колонку с выбранной датой
+          indexColumn = column;
+          //  console.log(column);
+          let timeColumn = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${indexMaster}!R4C${column}:R${
+              numberRecords + 4
+            }C${column}`,
+          });
+          let time = "";
+          let row = 0;
+          for (i = 0; i < timeMaster.length; i++) {
+            if (timeMaster[i][0] === "1") {
+              time = timeMaster[i][0] + timeMaster[i][1];
+              //  console.log(Number(time));
+              row = row + 1;
+            } else {
+              time = timeMaster[i][0];
+              //  console.log(Number(time));
+              row = row + 1;
+            }
+            // if (Number(time) === Number(timeCheck)) {
+            //   console.log(row);
+            //   break;
+            // }
+          }
+
           //Определяем свободное время
           let timeArr = [];
           for (i = 0; i < numberRecords + 4; i++) {
@@ -1986,113 +1886,188 @@ async function gsrun(cl) {
           }
           //Добавлем к массиву времени возврат к дате
           let items = timeArr;
-          let itemsDop = ["Выбрать другую дату"];
-          Array.prototype.push.apply(items, itemsDop);
-          //let dateList = dataColumn.data.values.flat();
+          // let itemsDop = ["Выбрать другую дату"];
+          Array.prototype.push.apply(items, anotherDateMaster);
           chose.telegram.sendMessage(
             chose.chat.id,
             "Клиент выбрал дату: " +
               `${indexDate}` +
-              ". \nНайдите для него другое свободное время.",
+              ". \nУточните, на какое время его записать",
             Markup.keyboard(items).oneTime().resize()
           );
-        }
-        //Добавлем к массиву времени возврат к дате
-
-        //});
-      } else if (timeMaster.includes(checkMessage)) {
-        indexTime = chose.update.message.text;
-
-        let rowTime = 4;
-        for (i = 0; i < timeMaster.length; i++) {
-          if (indexTime == timeMaster[i]) {
-            rowTime = rowTime + i;
-            indexRow = rowTime;
-            break;
-          }
-        }
-        //  let pointNameClient = ["Укажите имя клиента"];
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Клиент выбрал: \nМастер: " +
-            `${indexMaster}` +
-            "\nУслуга: " +
-            `${indexService}` +
-            "\nДата записи: " +
-            `${indexDate}` +
-            "\nВремя записи: " +
-            `${indexTime}` +
-            '\n(Уточняем  клиента данные и нажимаем на кнопку "Указать имя клиента". Имя вводить только после нажатия на кнопку )',
-          Markup.keyboard(pointNameClient).oneTime().resize()
-        );
-        return chose.scene.leave();
-      } else if (confirmRecordAdmin.includes(checkMessage)) {
-        let listSetting = new Array();
-        for (i = 0; i < 2; i++) {
-          listSetting.push(metaData.data.sheets[i].properties.title);
-        }
-        // Проверка свободно время или нет
-        let checkFreeArr = await gsapi.spreadsheets.values.get({
-          spreadsheetId: idSheets,
-          range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
-        });
-        let checkFree = checkFreeArr.data.values;
-        if (checkFree === undefined) {
-          let dateRecord = {
-            values: [
-              "Клиент: " + `${nameClient}` + "\nУслуга: " + `${indexService}`,
-            ],
-          };
-          const updateOptions = {
+          //});
+        } else if (anotherTime.includes(checkMessage)) {
+          let dataBaseSheet = await gsapi.spreadsheets.values.batchGet({
             spreadsheetId: idSheets,
-            range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
-            valueInputOption: "USER_ENTERED",
-            resource: { values: dateRecord },
-          };
-          await gsapi.spreadsheets.values.update(updateOptions);
-
-          //Оповещение администраторов
-          adminChatIdArr = await gsapi.spreadsheets.values.get({
-            spreadsheetId: idSheets,
-            range: `${listSetting[0]}!M1:M`,
+            ranges: [`${indexMaster}!A4:A`, `${indexMaster}!3:3`],
           });
-          let adminMessage = adminChatIdArr.data.values.flat();
-          for (let m = 1; m < adminMessage.length; m++) {
+          dateSheets = dataBaseSheet.data.valueRanges[1].values.flat();
+          numberRecords = dataBaseSheet.data.valueRanges[0].values.length;
+          timeMaster = dataBaseSheet.data.valueRanges[0].values.flat();
+
+          if (indexDate === currentDay) {
+            let timeCurrent = moment().format();
+            console.log(moment().format());
+            let timeCheck = timeCurrent[timeCurrent.length - 14];
+            if (timeCheck === "0") {
+              timeCheck = Number(timeCurrent[timeCurrent.length - 13]);
+            } else {
+              timeCheck = Number(
+                timeCurrent[timeCurrent.length - 14] +
+                  timeCurrent[timeCurrent.length - 13]
+              );
+            }
+            timeCheck = timeCheck + timeZone;
+            if (timeCheck >= 19) {
+              timeCheck = 8;
+            }
+
+            let time = "";
+            let row = 0;
+            for (i = 0; i < timeMaster.length; i++) {
+              if (timeMaster[i][0] === "1") {
+                time = timeMaster[i][0] + timeMaster[i][1];
+                //  console.log(Number(time));
+                row = row + 1;
+              } else {
+                time = timeMaster[i][0];
+                //  console.log(Number(time));
+                row = row + 1;
+              }
+              if (Number(timeCheck) <= 7) {
+                row = 0;
+                break;
+              } else if (Number(time) === Number(timeCheck)) {
+                //  console.log(row);
+                break;
+              }
+            }
+            // Определим колонку с текущей датой
+            let column = 1;
+            for (let i = 0; i < dateSheets.length; i++) {
+              if (indexDate === dateSheets[i]) {
+                column = column + i;
+                break;
+              }
+            }
+
+            indexColumn = column;
+            //console.log(column);
+            let timeColumn = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${indexMaster}!R4C${column}:R${
+                numberRecords + 4
+              }C${column}`,
+            });
+
+            //Определяем свободное время
+            let timeArr = [];
+            for (i = row + 1; i < numberRecords + 4; i++) {
+              if (timeColumn.data.values[i] == "") {
+                let itemss = timeMaster[i];
+                timeArr = timeArr.concat(itemss);
+              }
+            }
+            // console.log(timeArr);
+            //Добавлем к массиву времени возврат к дате
+            let items = timeArr;
+            let itemsDop = ["Выбрать другую дату"];
+            Array.prototype.push.apply(items, itemsDop);
+            //let dateList = dataColumn.data.values.flat();
             chose.telegram.sendMessage(
-              adminMessage[m],
-              "Появилась новая запись:\nМастер: " +
-                `${indexMaster}` +
-                "\nКлиент: " +
-                `${nameClient}` +
-                "\nУслуга: " +
-                `${indexService}` +
-                "\nДата записи: " +
+              chose.chat.id,
+              "Клиент выбрал дату: " +
                 `${indexDate}` +
-                "\nВремя записи: " +
-                `${indexTime}`,
-              // "\nТелефон: " +
-              // `${indexPhone}` +
-              // "\nID: " +
-              // `${chose.chat.id}`,
-              Markup.keyboard(adminMenu).oneTime().resize()
+                ". \nНайдите для него другое свободное время.",
+              Markup.keyboard(items).oneTime().resize()
+            );
+          } else {
+            //Определяем свободное время
+            let timeArr = [];
+            for (i = 0; i < numberRecords + 4; i++) {
+              if (timeColumn.data.values[i] == "") {
+                let itemss = timeMaster[i];
+                timeArr = timeArr.concat(itemss);
+              }
+            }
+            //Добавлем к массиву времени возврат к дате
+            let items = timeArr;
+            let itemsDop = ["Выбрать другую дату"];
+            Array.prototype.push.apply(items, itemsDop);
+            //let dateList = dataColumn.data.values.flat();
+            chose.telegram.sendMessage(
+              chose.chat.id,
+              "Клиент выбрал дату: " +
+                `${indexDate}` +
+                ". \nНайдите для него другое свободное время.",
+              Markup.keyboard(items).oneTime().resize()
             );
           }
-          //Оповещение мастера
-          let masterNameArr = await gsapi.spreadsheets.values.get({
+          //Добавлем к массиву времени возврат к дате
+
+          //});
+        } else if (timeMaster.includes(checkMessage)) {
+          indexTime = chose.update.message.text;
+
+          let rowTime = 4;
+          for (i = 0; i < timeMaster.length; i++) {
+            if (indexTime == timeMaster[i]) {
+              rowTime = rowTime + i;
+              indexRow = rowTime;
+              break;
+            }
+          }
+          //  let pointNameClient = ["Укажите имя клиента"];
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Клиент выбрал: \nМастер: " +
+              `${indexMaster}` +
+              "\nУслуга: " +
+              `${indexService}` +
+              "\nДата записи: " +
+              `${indexDate}` +
+              "\nВремя записи: " +
+              `${indexTime}` +
+              '\n(Уточняем  клиента данные и нажимаем на кнопку "Указать имя клиента". Имя вводить только после нажатия на кнопку )',
+            Markup.keyboard(pointNameClient).oneTime().resize()
+          );
+          return chose.scene.leave();
+        } else if (confirmRecordAdmin.includes(checkMessage)) {
+          let listSetting = new Array();
+          for (i = 0; i < 2; i++) {
+            listSetting.push(metaData.data.sheets[i].properties.title);
+          }
+          // Проверка свободно время или нет
+          let checkFreeArr = await gsapi.spreadsheets.values.get({
             spreadsheetId: idSheets,
-            range: `${listSetting[0]}!O1:O`,
+            range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
           });
-          let masterName = masterNameArr.data.values.flat();
-          for (let m = 1; m < masterName.length; m++) {
-            if (`${masterName[m]}` == `${indexMaster}`) {
-              let masterIdArr = await gsapi.spreadsheets.values.get({
-                spreadsheetId: idSheets,
-                range: `${listSetting[0]}!N1:N`,
-              });
-              let masterId = masterIdArr.data.values.flat()[m];
+          let checkFree = checkFreeArr.data.values;
+          if (checkFree === undefined) {
+            let dateRecord = {
+              values: [
+                "Клиент: " + `${nameClient}` + "\nУслуга: " + `${indexService}`,
+              ],
+            };
+            const updateOptions = {
+              spreadsheetId: idSheets,
+              range: `${indexMaster}!R${indexRow}C${indexColumn}:R${indexRow}C${indexColumn}`,
+              valueInputOption: "USER_ENTERED",
+              resource: { values: dateRecord },
+            };
+            await gsapi.spreadsheets.values.update(updateOptions);
+
+            //Оповещение администраторов
+            adminChatIdArr = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${listSetting[0]}!M1:M`,
+            });
+            let adminMessage = adminChatIdArr.data.values.flat();
+            for (let m = 1; m < adminMessage.length; m++) {
               chose.telegram.sendMessage(
-                masterId,
-                "Появилась новая запись: " +
+                adminMessage[m],
+                "Появилась новая запись:\nМастер: " +
+                  `${indexMaster}` +
                   "\nКлиент: " +
                   `${nameClient}` +
                   "\nУслуга: " +
@@ -2100,27 +2075,65 @@ async function gsrun(cl) {
                   "\nДата записи: " +
                   `${indexDate}` +
                   "\nВремя записи: " +
-                  `${indexTime}`
+                  `${indexTime}`,
+                // "\nТелефон: " +
+                // `${indexPhone}` +
+                // "\nID: " +
+                // `${chose.chat.id}`,
+                Markup.keyboard(adminMenu).oneTime().resize()
               );
-              break;
             }
+            //Оповещение мастера
+            let masterNameArr = await gsapi.spreadsheets.values.get({
+              spreadsheetId: idSheets,
+              range: `${listSetting[0]}!O1:O`,
+            });
+            let masterName = masterNameArr.data.values.flat();
+            for (let m = 1; m < masterName.length; m++) {
+              if (`${masterName[m]}` == `${indexMaster}`) {
+                let masterIdArr = await gsapi.spreadsheets.values.get({
+                  spreadsheetId: idSheets,
+                  range: `${listSetting[0]}!N1:N`,
+                });
+                let masterId = masterIdArr.data.values.flat()[m];
+                chose.telegram.sendMessage(
+                  masterId,
+                  "Появилась новая запись: " +
+                    "\nКлиент: " +
+                    `${nameClient}` +
+                    "\nУслуга: " +
+                    `${indexService}` +
+                    "\nДата записи: " +
+                    `${indexDate}` +
+                    "\nВремя записи: " +
+                    `${indexTime}`
+                );
+                break;
+              }
+            }
+            return chose.scene.leave();
+          } else {
+            chose.telegram.sendMessage(
+              chose.chat.id,
+              "К сожалению это время уже забронировали. Вы выбрали дату: " +
+                `${indexDate}` +
+                ". \nВыберите другое свободное время",
+              Markup.keyboard(anotherTime).oneTime().resize()
+            );
           }
-          return chose.scene.leave();
         } else {
           chose.telegram.sendMessage(
             chose.chat.id,
-            "К сожалению это время уже забронировали. Вы выбрали дату: " +
-              `${indexDate}` +
-              ". \nВыберите другое свободное время",
-            Markup.keyboard(anotherTime).oneTime().resize()
+            'Неизвестная команда. Сделайте выбор по кнопкам, либо напишите слово "старт" или "запись". Пишем без кавычек'
           );
+          return;
         }
-      } else {
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          'Неизвестная команда. Сделайте выбор по кнопкам, либо напишите слово "старт" или "запись". Пишем без кавычек'
+      } catch {
+        //  console.error("Ошибка111");
+        chose.reply(
+          '☝️ В связи с проведенными профилактическими работами запись необходимо начать с самого начала. \n Выберите по кнопкам на какую услугу вас записать 👇, либо напишите слово "старт" или "запись". Пишем без кавычек',
+          Markup.keyboard(serviceList).oneTime().resize()
         );
-        return;
       }
     });
     //  запись имени клиента
