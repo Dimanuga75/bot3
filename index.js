@@ -67,7 +67,7 @@ bot.hears("Выбрать еще мастера", Stage.enter("work"));
 //bot.on("sticker", (ctx) => ctx.reply("👍"));
 //bot.hears("hi", (ctx) => ctx.reply("Heloooooo"));
 bot.launch();
-let timeZone = 8;
+let timeZone = 0;
 // Enable graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
@@ -143,12 +143,12 @@ async function gsrun(cl) {
       ],
     });
 
-    let serviceList = dataBase.data.valueRanges[0].values.flat();
+    // let serviceList = dataBase.data.valueRanges[0].values.flat();
     let numberRecords = dataBase.data.valueRanges[1].values.length;
     let timeArray = dataBase.data.valueRanges[1].values.flat();
     let dateSheets = dataBase.data.valueRanges[2].values.flat();
     let dateArr = dataBase.data.valueRanges[3].values.flat();
-    let priceList = dataBase.data.valueRanges[4].values.flat();
+    // let priceList = dataBase.data.valueRanges[4].values.flat();
     let clientBaseIdAr = dataBase.data.valueRanges[5].values.flat();
     let idTimeInterval = Array(clientBaseIdAr.length);
 
@@ -176,10 +176,6 @@ async function gsrun(cl) {
         hoursRec[i],
         minuteRec[i]
       );
-      //console.log(dataRec[i]);
-      //console.log(hoursRec[i]);
-      //console.log(clientNameArr[i]);
-      //dateRecordsMM.push(dateRecords);
       let intervalTime =
         dateRecords - currentDateRestart - mmsHours * (timeZone + 1);
 
@@ -213,17 +209,16 @@ async function gsrun(cl) {
         const timerId = setTimeout(Setinterval, intervalTime);
 
         idTimeInterval[i] = Number(timerId);
-        // console.log(idTimeInterval);
       }
     }
 
     //-----------------------------------------------------------------!!!!!!!!!!!!
 
     //  Получаем прай-лист
-    let textPrice = "";
-    for (i = 0; i < serviceList.length; i++) {
-      textPrice = textPrice + `${serviceList[i]} - ` + `${priceList[i]}` + "\n";
-    }
+    // let textPrice = "";
+    // for (i = 0; i < serviceList.length; i++) {
+    //   textPrice = textPrice + `${serviceList[i]} - ` + `${priceList[i]}` + "\n";
+    // }
     //------------------------------------------------------------/////////
     // Определяем текущую дату из строки 2 с датами
     //Получаем номер колонки с текущей датой
@@ -293,7 +288,7 @@ async function gsrun(cl) {
       values: [""],
     };
     let dateListButton;
-    let blackList = [];
+    let listSheetButton = listSheet.concat(anotherService);
     let timerId;
     //Удаление записи клиента админом ----------------
     removeChoiceAdmin.enter(async (chose) => {
@@ -775,27 +770,29 @@ async function gsrun(cl) {
 
     //  Тело самого бота (работа с клиентом)
     recordClient.enter(async (chose) => {
-      //let startBot = ["старт", "запись", "Вернуться в начало", "1", "/run"];
       let checkMessage = chose.message.text;
-      //console.log(checkMessage);
+
       nameClient = chose.chat.first_name;
       let check = chose.chat.id.toString();
-      chose.reply("...");
-
-      let metaData = await gsapi.spreadsheets.get({
+      metaData = await gsapi.spreadsheets.get({
         spreadsheetId: idSheets,
       });
+      let listId = new Array();
+      for (i = 2; i < metaData.data.sheets.length; i++) {
+        listId.push(metaData.data.sheets[i].properties.sheetId);
+      }
 
       // Формируем список первых двух рабочих листов
+
       let listSetting = new Array();
       for (i = 0; i < 2; i++) {
         listSetting.push(metaData.data.sheets[i].properties.title);
       }
-      listSheet = [];
+
+      let listSheet = [];
       for (let i = 2; i < metaData.data.sheets.length; i++) {
         listSheet.push(metaData.data.sheets[i].properties.title);
       }
-      listSheetButton = listSheet.concat(anotherService);
       // Получаем данные из таблицы оодним запросом -------------------------------------------------------------------
       let dataBase = await gsapi.spreadsheets.values.batchGet({
         spreadsheetId: idSheets,
@@ -805,16 +802,77 @@ async function gsrun(cl) {
           `${listSheet[0]}!3:3`,
           `${listSheet[0]}!2:2`,
           `${listSetting[1]}!B2:B`,
+          `${listSetting[0]}!A2:A`,
+          `${listSetting[0]}!H2:H`,
+          `${listSetting[0]}!I2:I`,
+          `${listSetting[0]}!J2:J`,
+          `${listSetting[0]}!K2:k`,
+          `${listSetting[0]}!L2:L`,
           `${listSetting[0]}!P1:P`,
+          `${listSetting[0]}!F2:F`,
+          `${listSetting[0]}!G2:G`,
+          `${listSetting[0]}!D2:D`,
         ],
       });
-      // Проверяем на черный список
+
       serviceList = dataBase.data.valueRanges[0].values.flat();
+      // let numberRecords = dataBase.data.valueRanges[1].values.length;
+      // let timeArray = dataBase.data.valueRanges[1].values.flat();
+      // let dateSheets = dataBase.data.valueRanges[2].values.flat();
+      // let dateArr = dataBase.data.valueRanges[3].values.flat();
+      priceList = dataBase.data.valueRanges[4].values.flat();
+      clientBaseIdAr = dataBase.data.valueRanges[5].values.flat();
+      //idTimeInterval = Array(clientBaseIdAr.length);
 
-      let dateArr = dataBase.data.valueRanges[3].values.flat();
-      let priceList = dataBase.data.valueRanges[4].values.flat();
-      let blackList = dataBase.data.valueRanges[5].values.flat();
+      // let clientNameArr = dataBase.data.valueRanges[14].values.flat();
 
+      // let clientTimeArr = dataBase.data.valueRanges[12].values.flat();
+      // let clientMasterArr = dataBase.data.valueRanges[13].values.flat();
+      // let clientServiceArr = dataBase.data.valueRanges[6].values.flat();
+      let monthRec = dataBase.data.valueRanges[7].values.flat();
+      let dataRec = dataBase.data.valueRanges[8].values.flat();
+      let hoursRec = dataBase.data.valueRanges[9].values.flat();
+      let minuteRec = dataBase.data.valueRanges[10].values.flat();
+      blackList = dataBase.data.valueRanges[11].values.flat();
+
+      chose.reply("...");
+      let currentDateCheck = Date.now();
+      let intervalRecords;
+      let clientRecord;
+      for (i = 0; i < clientBaseIdAr.length; i++) {
+        if (check == clientBaseIdAr[i]) {
+          dateRecords = new Date(
+            currentYear,
+            monthRec[i],
+            dataRec[i],
+            hoursRec[i],
+            minuteRec[i]
+          );
+          intervalRecords =
+            dateRecords - currentDateCheck - mmsHours * timeZone;
+          // console.log(intervalRecords);
+          clientRecord = await gsapi.spreadsheets.values.get({
+            spreadsheetId: idSheets,
+            range: `${listSetting[0]}!E${i + 2}:H${i + 2}`,
+          });
+          break;
+        }
+      }
+      //if (intervalRecords > 0) {
+      //chose.reply(
+      //  "У вас есть действующая запись 💁‍♂️:\nМастер: " +
+      //    `${clientRecord.data.values.flat()[2]}` +
+      //    "\nУслуга ✂️: " +
+      //    `${clientRecord.data.values.flat()[3]}` +
+      //    "\nДата записи 🗓: " +
+      //    `${clientRecord.data.values.flat()[0]}` +
+      //    "\nВремя записи ⏰: " +
+      //    `${clientRecord.data.values.flat()[1]}` +
+      //    "\nЕсли вы хотите изменить время посещения, необходимо сначала удалить текущую запись",
+      //  Markup.keyboard(deleteRecord).oneTime().resize()
+      //);
+      //return chose.scene.leave();
+      //} else {
       //  Получаем прай-лист
       let textPrice = "";
       for (i = 0; i < serviceList.length; i++) {
@@ -862,7 +920,7 @@ async function gsrun(cl) {
       if (blackList.includes(check)) {
         return chose.scene.leave();
       } else if (recordNewButton.includes(checkMessage)) {
-        Array.prototype.push.apply(serviceList, priceButton);
+        // Array.prototype.push.apply(serviceList, priceButton);
 
         chose.telegram.sendMessage(
           chose.chat.id,
@@ -870,7 +928,7 @@ async function gsrun(cl) {
           Markup.keyboard(serviceList).oneTime().resize()
         );
       } else if (startBot.includes(checkMessage)) {
-        Array.prototype.push.apply(serviceList, priceButton);
+        // Array.prototype.push.apply(serviceList, priceButton);
         chose.telegram.sendMessage(
           chose.chat.id,
           "Приветствуем вас " +
@@ -879,12 +937,11 @@ async function gsrun(cl) {
           Markup.keyboard(serviceList).oneTime().resize()
         );
       }
-
+      //}
       recordClient.on("message", async (chose) => {
         try {
           checkMessage = chose.message.text.toString();
-          //  console.log(checkMessage);
-          //  console.log(currentDay[0]);
+
           let metaData = await gsapi.spreadsheets.get({
             spreadsheetId: idSheets,
           });
@@ -933,7 +990,7 @@ async function gsrun(cl) {
           if (blackList.includes(check)) {
             return chose.scene.leave();
           } else if (startBot.includes(checkMessage)) {
-            Array.prototype.push.apply(serviceList, priceButton);
+            // Array.prototype.push.apply(serviceList, priceButton);
             chose.telegram.sendMessage(
               chose.chat.id,
               "Приветствуем вас " +
@@ -1110,7 +1167,7 @@ async function gsrun(cl) {
 
             //Определяем свободное время
             let timeArr = [];
-            for (i = row; i < numberRecords + 4; i++) {
+            for (i = row + 1; i < numberRecords + 4; i++) {
               if (timeColumn.data.values[i] == "") {
                 let itemss = timeMaster[i];
                 timeArr = timeArr.concat(itemss);
@@ -1166,20 +1223,7 @@ async function gsrun(cl) {
                 numberRecords + 4
               }C${column}`,
             });
-            // let time = "";
-            // let row = 0;
-            // for (i = 0; i < timeMaster.length; i++) {
-            //   if (timeMaster[i][0] === "1") {
-            //     time = timeMaster[i][0] + timeMaster[i][1];
-            //     //  console.log(Number(time));
-            //     row = row + 1;
-            //   } else {
-            //     time = timeMaster[i][0];
-            //     //  console.log(Number(time));
-            //     row = row + 1;
-            //   }
-            // }
-            // console.log(row);
+
             //Определяем свободное время
             let timeArr = [];
             for (i = 0; i < numberRecords + 4; i++) {
@@ -1374,6 +1418,7 @@ async function gsrun(cl) {
               recordClientArr.data.valueRanges[2].values.flat();
             let masterName = recordClientArr.data.valueRanges[3].values.flat();
             let masterIdArr = recordClientArr.data.valueRanges[4].values.flat();
+
             if (checkFree === undefined) {
               // Запись в таблицу (закоментирована считывание телефона)
               //let idList = idListArr.data.values.flat();
@@ -1598,17 +1643,23 @@ async function gsrun(cl) {
                 Markup.keyboard(anotherTime).oneTime().resize()
               );
             }
-          } else {
-            chose.telegram.sendMessage(
-              chose.chat.id,
-              'Неизвестная команда  👇. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
-              Markup.keyboard(recordNewButton).oneTime().resize()
-            );
-            return chose.scene.leave();
           }
+          //   else {
+          //    chose.telegram.sendMessage(
+          //      chose.chat.id,
+          //      'Неизвестная команда  👇. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
+          //      Markup.keyboard(recordNewButton).oneTime().resize()
+          //    );
+          //    return chose.scene.leave();
+          //  }
         } catch (err) {
-          chose.reply("Ошибка");
+          // chose.reply("Ошибка");
           console.error("Ошибка");
+          chose.reply(
+            'Неизвестная команда  👇. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
+            Markup.keyboard(recordNewButton).oneTime().resize()
+          );
+          return chose.scene.leave();
         }
       });
     });
@@ -1617,6 +1668,7 @@ async function gsrun(cl) {
     // ------------ Запись клиента админом------------------------
     bot.on("message", async (chose) => {
       let checkMessage = chose.message.text;
+      //check =
       let changeService = ["Заменить услугу"];
       try {
         if (clientRecord.includes(checkMessage)) {
@@ -1636,6 +1688,8 @@ async function gsrun(cl) {
             range: `${listSetting[1]}!A2:A`,
           });
           serviceList = serviceListArr.data.values.flat();
+          serviceList.pop();
+          // console.log(serviceList);
           chose.telegram.sendMessage(
             chose.chat.id,
             "На какую услугу записать клиента",
@@ -1812,7 +1866,7 @@ async function gsrun(cl) {
 
           //Определяем свободное время
           let timeArr = [];
-          for (i = row; i < numberRecords + 4; i++) {
+          for (i = row + 1; i < numberRecords + 4; i++) {
             if (timeColumn.data.values[i] == "") {
               let itemss = timeMaster[i];
               timeArr = timeArr.concat(itemss);
@@ -2129,9 +2183,22 @@ async function gsrun(cl) {
           return;
         }
       } catch {
-        //  console.error("Ошибка111");
+        adminChatIdArr = await gsapi.spreadsheets.values.get({
+          spreadsheetId: idSheets,
+          range: `${listSetting[0]}!M1:M`,
+        });
+        let checkId = chose.chat.id.toString();
+        let adminMessage = adminChatIdArr.data.values.flat();
+        console.log(checkId);
+        if (adminMessage.includes(checkId)) {
+          chose.reply(
+            'Неизвестная команда. Будьте внимательны. Сделайте выбор по кнопкам, либо напишите слово "старт" или "запись". Пишем без кавычек',
+            Markup.keyboard(adminMenu).oneTime().resize()
+          );
+          return;
+        }
         chose.reply(
-          '☝️ В связи с проведенными профилактическими работами запись необходимо начать с самого начала. \nНахмите на кнопку "Новая запись" 👇, либо напишите слово "старт" или "запись". Пишем без кавычек',
+          '☝️ В связи с проведением профилактическмх работ, запись необходимо начать с самого начала. \nНахмите на кнопку "Новая запись" 👇, либо напишите слово "старт" или "запись". Пишем без кавычек',
           Markup.keyboard(recordNewButton).oneTime().resize()
         );
       }
@@ -2522,7 +2589,7 @@ async function gsrun(cl) {
     });
   } catch (err) {
     console.error(err);
-    console.error("Ошибка");
+    // console.error("Ошибка");
     // bot.telegram.sendMessage(chat.id, "Ошибка");
   }
 }
