@@ -858,86 +858,86 @@ async function gsrun(cl) {
           break;
         }
       }
-      //if (intervalRecords > 0) {
-      //chose.reply(
-      //  "У вас есть действующая запись 💁‍♂️:\nМастер: " +
-      //    `${clientRecord.data.values.flat()[2]}` +
-      //    "\nУслуга ✂️: " +
-      //    `${clientRecord.data.values.flat()[3]}` +
-      //    "\nДата записи 🗓: " +
-      //    `${clientRecord.data.values.flat()[0]}` +
-      //    "\nВремя записи ⏰: " +
-      //    `${clientRecord.data.values.flat()[1]}` +
-      //    "\nЕсли вы хотите изменить время посещения, необходимо сначала удалить текущую запись",
-      //  Markup.keyboard(deleteRecord).oneTime().resize()
-      //);
-      //return chose.scene.leave();
-      //} else {
-      //  Получаем прай-лист
-      let textPrice = "";
-      for (i = 0; i < serviceList.length; i++) {
-        textPrice =
-          textPrice +
-          `✅ ${serviceList[i]} - ` +
-          `${priceList[i]} рублей` +
-          "\n";
-      }
-      // Определяем текущую дату из строки 2 с датами
-      let columns = 1;
-      for (let i = 0; i < dateArr.length; i++) {
-        if (
-          new Date().getMonth() + 1 + "/" + new Date().getDate() ===
-          dateArr[i]
-        ) {
-          columns = columns + i;
-          break;
+      if (intervalRecords > 0) {
+        chose.reply(
+          "У вас есть действующая запись 💁‍♂️:\nМастер: " +
+            `${clientRecord.data.values.flat()[2]}` +
+            "\nУслуга ✂️: " +
+            `${clientRecord.data.values.flat()[3]}` +
+            "\nДата записи 🗓: " +
+            `${clientRecord.data.values.flat()[0]}` +
+            "\nВремя записи ⏰: " +
+            `${clientRecord.data.values.flat()[1]}` +
+            "\nЕсли вы хотите изменить время посещения, необходимо сначала удалить текущую запись",
+          Markup.keyboard(deleteRecord).oneTime().resize()
+        );
+        return chose.scene.leave();
+      } else {
+        //  Получаем прай-лист
+        let textPrice = "";
+        for (i = 0; i < serviceList.length; i++) {
+          textPrice =
+            textPrice +
+            `✅ ${serviceList[i]} - ` +
+            `${priceList[i]} рублей` +
+            "\n";
+        }
+        // Определяем текущую дату из строки 2 с датами
+        let columns = 1;
+        for (let i = 0; i < dateArr.length; i++) {
+          if (
+            new Date().getMonth() + 1 + "/" + new Date().getDate() ===
+            dateArr[i]
+          ) {
+            columns = columns + i;
+            break;
+          }
+        }
+        // ---------------------------
+        let timeCurrentcheck = moment().format();
+        let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
+        if (dateCheck === "0") {
+          dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
+        } else {
+          dateCheck = Number(
+            timeCurrentcheck[timeCurrentcheck.length - 14] +
+              timeCurrentcheck[timeCurrentcheck.length - 13]
+          );
+        }
+        dateCheck = dateCheck + timeZone;
+        if (dateCheck >= 20) {
+          columns = columns + 1;
+        }
+        //Получаем значение текущей даты
+        dataColumn = await gsapi.spreadsheets.values.get({
+          spreadsheetId: idSheets,
+          range: `${listSheet[0]}!R3C${columns}:R3C${dateArr.length}`,
+        });
+        dateList = dataColumn.data.values.flat();
+        dateListButton = anotherMaster.concat(dateList);
+        currentDay = dateList[0];
+
+        if (blackList.includes(check)) {
+          return chose.scene.leave();
+        } else if (recordNewButton.includes(checkMessage)) {
+          // Array.prototype.push.apply(serviceList, priceButton);
+
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Выберите на какую услугу вас записать 👇",
+            Markup.keyboard(serviceList).oneTime().resize()
+          );
+        } else if (startBot.includes(checkMessage)) {
+          // Array.prototype.push.apply(serviceList, priceButton);
+          chose.telegram.sendMessage(
+            chose.chat.id,
+            "Приветствуем вас " +
+              `${nameClient}` +
+              ".\nВыберите на какую услугу вас записать 👇",
+            Markup.keyboard(serviceList).oneTime().resize()
+          );
         }
       }
-      // ---------------------------
-      let timeCurrentcheck = moment().format();
-      let dateCheck = timeCurrentcheck[timeCurrentcheck.length - 14];
-      if (dateCheck === "0") {
-        dateCheck = Number(timeCurrentcheck[timeCurrentcheck.length - 13]);
-      } else {
-        dateCheck = Number(
-          timeCurrentcheck[timeCurrentcheck.length - 14] +
-            timeCurrentcheck[timeCurrentcheck.length - 13]
-        );
-      }
-      dateCheck = dateCheck + timeZone;
-      if (dateCheck >= 20) {
-        columns = columns + 1;
-      }
-      //Получаем значение текущей даты
-      dataColumn = await gsapi.spreadsheets.values.get({
-        spreadsheetId: idSheets,
-        range: `${listSheet[0]}!R3C${columns}:R3C${dateArr.length}`,
-      });
-      dateList = dataColumn.data.values.flat();
-      dateListButton = anotherMaster.concat(dateList);
-      currentDay = dateList[0];
-
-      if (blackList.includes(check)) {
-        return chose.scene.leave();
-      } else if (recordNewButton.includes(checkMessage)) {
-        // Array.prototype.push.apply(serviceList, priceButton);
-
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Выберите на какую услугу вас записать 👇",
-          Markup.keyboard(serviceList).oneTime().resize()
-        );
-      } else if (startBot.includes(checkMessage)) {
-        // Array.prototype.push.apply(serviceList, priceButton);
-        chose.telegram.sendMessage(
-          chose.chat.id,
-          "Приветствуем вас " +
-            `${nameClient}` +
-            ".\nВыберите на какую услугу вас записать 👇",
-          Markup.keyboard(serviceList).oneTime().resize()
-        );
-      }
-      //}
       recordClient.on("message", async (chose) => {
         try {
           checkMessage = chose.message.text.toString();
@@ -1653,7 +1653,6 @@ async function gsrun(cl) {
           //    return chose.scene.leave();
           //  }
         } catch (err) {
-          // chose.reply("Ошибка");
           console.error("Ошибка");
           chose.reply(
             'Неизвестная команда  👇. Сделайте выбор по кнопке "Новая запись", либо напишите слово "старт" или "запись". Пишем без кавычек',
