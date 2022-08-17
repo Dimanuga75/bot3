@@ -2498,8 +2498,8 @@ async function gsrun(cl) {
                     range: {
                       sheetId: indexIdSheets,
                       dimension: "COLUMNS",
-                      startIndex: 2,
-                      endIndex: 3,
+                      startIndex: 1,
+                      endIndex: 2,
                     },
                   },
                 },
